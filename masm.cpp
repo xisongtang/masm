@@ -45,6 +45,7 @@ int main(int argc, char *args[])
 		fin.getline(buffer, MAXLEN);
 		try
 		{
+			//cout << buffer << endl;
 			ftout << prehandler.decode(buffer);
 		}
 		catch (Exception &e)

@@ -228,3 +228,9 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+# testing file
+*.bit
+*.asm
+*.s
+*.txt

@@ -10,10 +10,11 @@ using namespace std;
 
 string replace(string source, string e, string c)
 {
-	int index = -1;
-	while ( (index = source.find(e, index + 1)) != string::npos)
+	int index = 0;
+	while ( (index = source.find(e, index)) != string::npos)
 	{
 		source.replace(index, e.size(), c);
+		index = index + c.size();
 	}
 	return source;
 }

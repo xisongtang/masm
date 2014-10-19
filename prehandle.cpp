@@ -106,7 +106,7 @@ Prehandle::Prehandle()
 	format_map["blez"] = "rs,imme";
 	format_map["bltz"] = "rs,imme";
 	format_map["bltzal"] = "rs,imme";
-	format_map["bne"] = "rs,imme";
+	format_map["bne"] = "rt,rs,imme";
 	format_map["lh"] = "rt,imme(rs)";
 	format_map["lw"] = "rt,imme(rs)";
 	format_map["ori"] = "rt,rs,imme";
@@ -336,34 +336,51 @@ string Prehandle::decode(string str) throw(...)
 
 		if (format_map[operation] == "")
 			throw Exception(Exception::ion + ":" + operation, org_str);
-		string format = format_map[operation];
-		string ftmp;
-		string otmp;
-		string tmp;
-		int lfindex = 0;
-		int loindex = 0;
-		int findex;
-		int oindex;
-		operater = replace(operater, " ", "");
-		operater = replace(operater, "(", ",");
-		format = replace(format, "(", ",");
-		operater = replace(operater, ")", "");
-		format = replace(format, ")", "");
-		operater += ",";
-		format += ",";
-		while ((findex = format.find(',',lfindex)) != string::npos)
+		string format;
+		string regexstr;
+		
+		if (operation == "pop" || operation == "push")
 		{
-			oindex = operater.find(',', loindex);
-				
-			if (oindex == string::npos)
+			vector<string> vs = split(operater);
+			int len = vs.size();
+			regexstr = "";
+			format = "";
+			for (int i = 0; i != len; ++i)
 			{
-				if (operation == "push" || operation == "pop")
-					break;
-				throw Exception(Exception::ge, org_str);
+				regexstr += "(.*)";
+				format += "rs";
+				if (i != len - 1)
+				{
+					regexstr += ",";
+					format += ",";
+				}
 			}
-
-			ftmp = trim(format.substr(lfindex, findex - lfindex));
-			otmp = trim(operater.substr(loindex, oindex - loindex));
+		}
+		else
+		{
+			format = format_map[operation];
+			regexstr = format;
+			regexstr = replace(regexstr, "\t", "");
+			regexstr = replace(regexstr, " ", "");
+			regexstr = replace(regexstr, "(", "\\(");
+			regexstr = replace(regexstr, ")", "\\)");
+			regexstr = replace(regexstr, "rs", "(.*)");
+			regexstr = replace(regexstr, "rt", "(.*)");
+			regexstr = replace(regexstr, "rd", "(.*)");
+			regexstr = replace(regexstr, "imme", "(.*)");
+			regexstr = replace(regexstr, "target", "(.*)");
+			regexstr = replace(regexstr, "shamt", "(.*)");
+		}
+		regex re(regexstr);
+		smatch opsm, fmsm;
+		if (!regex_match(operater, opsm, re))
+			throw Exception("Invalid operation format", org_str);
+		regex_match(format, fmsm, re);
+		for (int i = 1; i != opsm.size(); ++i)
+		{
+			string otmp, ftmp;
+			otmp = trim(opsm[i].str());
+			ftmp = trim(fmsm[i].str());
 			if (ftmp == "rs")
 			{
 				if (otmp[0] != '$' || reg_map[otmp] == "")
@@ -387,7 +404,7 @@ string Prehandle::decode(string str) throw(...)
 					Calculator calc(otmp);
 					strstream << calc.exec();
 					strstream >> tmp;
-					replace(str, otmp, tmp);
+					str = replace(str, otmp, tmp);
 				}
 				else if (!isnumber(otmp))
 					throw Exception(Exception::is, org_str);
@@ -400,7 +417,7 @@ string Prehandle::decode(string str) throw(...)
 					Calculator calc(otmp);
 					strstream << calc.exec();
 					strstream >> tmp;
-					replace(str, otmp, tmp);
+					str = replace(str, otmp, tmp);
 				}
 				else if (islegallabel(otmp))
 					;
@@ -415,7 +432,7 @@ string Prehandle::decode(string str) throw(...)
 					Calculator calc(otmp);
 					strstream << calc.exec();
 					strstream >> tmp;
-					replace(str, otmp, tmp);
+					str = replace(str, otmp, tmp);
 				}
 				else if (islegallabel(otmp))
 					;
@@ -424,12 +441,6 @@ string Prehandle::decode(string str) throw(...)
 			}
 			else if (operation != "syscall")
 				assert(1 == 0);
-			loindex = oindex + 1;
-
-			if (operation == "push" || operation == "pop")
-				lfindex = 0;
-			else
-				lfindex = findex + 1;
 		}
 		//translate the pseudo codes to basic codes
 		if (pseudo_map[operation])
@@ -449,6 +460,7 @@ string Prehandle::decode(string str) throw(...)
 			des = replace(des, ":", " ");
 			des = replace(des, ";", "\n");
 			str = "";
+			operater += ",";
 			int offset = 0;
 			while ((findex = format.find(',',lfindex)) != string::npos)
 			{
