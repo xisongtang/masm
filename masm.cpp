@@ -13,9 +13,6 @@
 #define MAXLEN 0xffff
 using namespace std;
 
-Instr *instrs[MAXLEN];
-int labels[MAXLEN];
-map<string, unsigned> label_map;
 
 int main(int argc, char *args[])
 {
@@ -26,46 +23,74 @@ int main(int argc, char *args[])
 	}
 	string finname = args[1];
 	string foutname = "a.asm";
+	string ftoutname = split(finname,".")[0] + ".obj";
 	if (argc >= 3)
 		foutname = args[2];
-	ifstream fin(finname);
+	
 	char buffer[MAXLEN];
 	string content;
 	unsigned offset = 0;
 	unsigned line = 0;
 	unsigned lablenumber = 0;
 	stringstream strstream;
+	ifstream fin(finname);
+	ofstream ftout(ftoutname);
+	bool has_error = false;
+	
 	Prehandle prehandler;
+	
 	while (!fin.eof())
 	{
-		fin.getline(buffer, MAXLEN);
-		strstream << prehandler.decode(buffer);
-	}
-	fin.close();
-	List<Instr> instrs;
-	bool has_error = false;
-	while (!strstream.eof())
-	{
 		++line;
-		strstream.getline(buffer,MAXLEN);
-		Instr cur;
-		try{
-			cur.decode(buffer);
-			instrs.push_back(cur);
-		} catch (Exception e){
+		fin.getline(buffer, MAXLEN);
+		try
+		{
+			ftout << prehandler.decode(buffer);
+		}
+		catch (Exception &e)
+		{
 			e.setLine(line);
 			e.printError();
 			has_error = true;
 		}
 	}
+	
+	ftout.close();
+	cout << "preproccess finished" << endl;
 	if (has_error)
+	{
+		system("pause");
 		exit(1);
+	}
+	fin.close();
+	fin.open(ftoutname);
+	
+	List<Instr> instrs;
+	
+	while (!fin.eof())
+	{
+		fin.getline(buffer,MAXLEN);
+		Instr cur;
+		cur.decode(buffer);
+		instrs.push_back(cur);
+	}
+	cout << "instrs decoding finished" << endl;
 	Instr::sort(instrs);
+	cout << "instrs' block sorting finished" << endl;
 	Instr::resolveAddr(instrs);
-	Instr::resolveLabel(instrs);
+	cout << "instrs' address resolved" << endl;
+	try{
+		Instr::resolveLabel(instrs);
+		cout << "labels resolved" <<endl;
+	}catch(Exception e)
+	{
+		e.printError();
+		throw e;
+	}
 
 	ofstream fout(foutname, ofstream::binary);
 	Instr::outputInstrs(instrs, fout);
+	cout << "binary file output finished" << endl;
 	fout.close();
 	system("pause");
 }

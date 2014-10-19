@@ -64,6 +64,10 @@ public:
 		tnext->last = tlast;
 		it = tnext;
 	}
+	bool isempty() const
+	{
+		return head->next == tail;
+	}
 	iterator begin()
 	{
 		return head->next;
@@ -71,6 +75,17 @@ public:
 	iterator end()
 	{
 		return tail;
+	}
+	bool check() const
+	{
+		iterator it = head->next;
+		while (it != tail)
+		{
+			if (it == NULL)
+				return false;
+			it = it->next;
+		}
+		return true;
 	}
 	~List()
 	{

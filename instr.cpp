@@ -27,7 +27,7 @@ void Instr::_initialize()
 {
 	opcode = type = rs = rt = rd = shamt = func = imme = target = byte_code = 
 		address = data_length = 0;
-	has_label = has_comment = is_label = is_origin = is_data = is_align = 
+	has_label = is_label = is_origin = is_data = is_align = 
 		is_instr = false;
 	label = asm_code = operation = comment = section = "";
 }
@@ -47,14 +47,14 @@ void Instr::initialize_map()
 	asm_map["addi"] = disasm_map[0x08] = new rule("addi", 0x08,0, "rt,rs,imme", 'i');
 	asm_map["addiu"] = disasm_map[0x09] = new rule("addiu", 0x09,0, "rt,rs,imme", 'i');
 	asm_map["andi"] = disasm_map[0x0c] = new rule("andi", 0x0c,0, "rt,rs,imme", 'i');
-	asm_map["beq"] = disasm_map[0x04] = new rule("beq", 0x04,0, "rt,rs,imme", 'i');
+	asm_map["beq"] = disasm_map[0x04] = new rule("beq", 0x04,0, "rs,rt,imme", 'i');
 	asm_map["bgez"] = disasm_map[0x01] = new rule("bgez", 0x01,0, "rs,imme", 'i');
 	//asm_map["bgezal"] = disasm_map[0x01] = new rule("bgezal", 0x01,0, "rs,imme", 'i');
 	asm_map["bgtz"] = disasm_map[0x07] = new rule("bgtz", 0x07,0, "rs,imme", 'i');
 	asm_map["blez"] = disasm_map[0x06] = new rule("blez", 0x06,0, "rs,imme", 'i');
 	asm_map["bltz"] = disasm_map[0x09] = new rule("bltz", 0x01,0, "rs,imme", 'i');
 	//asm_map["bltzal"] = disasm_map[0x01] = new rule("bltzal", 0x01,0, "rs,imme", 'i');
-	asm_map["bne"] = disasm_map[0x05] = new rule("bne", 0x05,0, "rt,rs,imme", 'i');
+	asm_map["bne"] = disasm_map[0x05] = new rule("bne", 0x05,0, "rs,rt,imme", 'i');
 	asm_map["lh"] = disasm_map[0x21] = new rule("lh", 0x21,0, "rt,imme(rs)", 'i');
 	asm_map["lw"] = disasm_map[0x23] = new rule("lw", 0x23,0, "rt,imme(rs)", 'i');
 	asm_map["ori"] = disasm_map[0x0D] = new rule("ori", 0x0D,0, "rt,rs,imme", 'i');
@@ -78,16 +78,16 @@ void Instr::initialize_map()
 	asm_map["mtlo"] = disfuncasm_map[0x13] = new rule("mtlo", 0,0x13, "rs", 'r');
 	asm_map["mul"] = disfuncasm_map[0x18] = new rule("mul", 0,0x18, "rs,rt", 'r');
 	asm_map["or"] = disfuncasm_map[0x25] = new rule("or", 0,0x25, "rd,rs,rt", 'r');
-	asm_map["sll"] = disfuncasm_map[0x00] = new rule("sll", 0,0x00, "rd,rs,shamt", 'r');
+	asm_map["sll"] = disfuncasm_map[0x00] = new rule("sll", 0,0x00, "rd,rt,shamt", 'r');
 	asm_map["sllv"] = disfuncasm_map[0x04] = new rule("sllv", 0,0x04, "rd,rt,rs", 'r');
-	asm_map["slt"] = disfuncasm_map[0x2A] = new rule("slt", 0,0x2A, "rd,rs,rt", 'r');
+	asm_map["slt"] = disfuncasm_map[0x2A] = new rule("slt", 0,0x2A, "rd,rt,rt", 'r');
 	asm_map["sltu"] = disfuncasm_map[0x2B] = new rule("sltu", 0,0x2B, "rd,rs,rt", 'r');
-	asm_map["sra"] = disfuncasm_map[0x03] = new rule("sra", 0,0x03, "rd,rs,shamt", 'r');
-	asm_map["srav"] = disfuncasm_map[0x07] = new rule("srav", 0,0x07, "rd,rs,rt", 'r');
-	asm_map["src"] = disfuncasm_map[0x01] = new rule("src", 0,0x01, "rd,rs,shamt", 'r');
-	asm_map["srcv"] = disfuncasm_map[0x05] = new rule("srcv", 0,0x05, "rd,rs,rt", 'r');
-	asm_map["srl"] = disfuncasm_map[0x02] = new rule("srl", 0,0x02, "rd,rs,shamt", 'r');
-	asm_map["srlv"] = disfuncasm_map[0x06] = new rule("srlv", 0,0x06, "rd,rs,rt", 'r');
+	asm_map["sra"] = disfuncasm_map[0x03] = new rule("sra", 0,0x03, "rd,rt,shamt", 'r');
+	asm_map["srav"] = disfuncasm_map[0x07] = new rule("srav", 0,0x07, "rd,rt,rs", 'r');
+	asm_map["src"] = disfuncasm_map[0x01] = new rule("src", 0,0x01, "rd,rt,shamt", 'r');
+	asm_map["srcv"] = disfuncasm_map[0x05] = new rule("srcv", 0,0x05, "rd,rt,rs", 'r');
+	asm_map["srl"] = disfuncasm_map[0x02] = new rule("srl", 0,0x02, "rd,rt,shamt", 'r');
+	asm_map["srlv"] = disfuncasm_map[0x06] = new rule("srlv", 0,0x06, "rd,rt,rs", 'r');
 	asm_map["sub"] = disfuncasm_map[0x22] = new rule("sub", 0,0x22, "rd,rs,rt", 'r');
 	asm_map["subu"] = disfuncasm_map[0x23] = new rule("subu", 0,0x23, "rd,rs,rt", 'r');
 	asm_map["xor"] = disfuncasm_map[0x26] = new rule("xor", 0,0x26, "rd,rs,rt", 'r');
@@ -206,30 +206,14 @@ void Instr::decode(unsigned int byte_code)
 	stringstream strstream;
 	string tmp = "";
 	string formal;
-	if (opcode == 0x01)
+	if (ref_map[map_index] == NULL)
 	{
-		switch (rt)
-		{
-		case 0:
-			asm_code = "bltz ";
-			break;
-		case 1:
-			asm_code = "bgez ";
-			break;
-		case 16:
-			asm_code = "bltzal ";
-			break;
-		case 17:
-			asm_code = "bgezal ";
-			break;
-		}
+		asm_code = "sll $0,$0,0";
+		return ;
 	}
-	else
-	{
-		assert(ref_map[map_index] != NULL);
-		operation = ref_map[map_index]->operation;
-		asm_code = operation + " ";
-	}
+	operation = ref_map[map_index]->operation;
+	asm_code = operation + " ";
+
 	if (ref_map[map_index] == NULL)
 	{
 		cerr << "error: The bytecode may not meet our demands" << endl;
@@ -292,25 +276,19 @@ Instr::Instr(unsigned int byte_code)
 	decode(byte_code);
 }
 
-void Instr::decode(string asm_code) throw(...)
+void Instr::decode(string asm_code)
 {
 	initialize_map();
 	_initialize();
 	int ind;
 	stringstream strstream;
-	if ((ind = asm_code.find("#")) != string::npos)
-	{
-		has_comment = true;
-		comment = asm_code.substr(ind);
-		asm_code = asm_code.substr(0, ind);
-	}
 	asm_code = trim(asm_code);
-	if (asm_code.empty())
+	if (asm_code.size() == 0)
 	{
-		section = "empty";
+		section = "__empty";
 		return;
 	}
-
+	section =  cursect;
 	if ( asm_code[0] == '.' )
 	{
 		if ((ind = asm_code.find(".origin")) != string::npos)
@@ -343,8 +321,6 @@ void Instr::decode(string asm_code) throw(...)
 		cursect = section = sec;
 		return ;
 	}
-
-	section =  cursect;
 
 	if ( (ind = asm_code.find(".2byte")) != string::npos)
 	{
@@ -400,10 +376,8 @@ void Instr::decode(string asm_code) throw(...)
 	{
 		label = trim(asm_code.substr(0, ind));
 		string tmp = trim(asm_code.substr(ind + 6));
-		tmp = trim(tmp, "\"");
-		for (int i = 0; i != tmp.length(); ++i)
-			data_table.push_back(tmp[i]);
 		data_type = ".ascii";
+		data_table = split(tmp);
 		data_length = 2;
 		is_data = true;
 		is_label = true;
@@ -412,10 +386,7 @@ void Instr::decode(string asm_code) throw(...)
 	{
 		label = trim(asm_code.substr(0, ind));
 		string tmp = trim(asm_code.substr(ind + 7));
-		tmp = trim(tmp, "\"");
-		for (int i = 0; i != tmp.length(); ++i)
-			data_table.push_back(tmp[i]);
-		data_table.push_back(0);
+		data_table = split(tmp);
 		data_type = ".asciiz";
 		data_length = 2;
 		is_data = true;
@@ -430,8 +401,27 @@ void Instr::decode(string asm_code) throw(...)
 		strstream >> times;
 		strstream.clear();
 		for (int i = 0; i != times; ++i)
-			data_table.push_back(0);
+			data_table.push_back("0");
 		data_length = 2;
+		is_data = true;
+		is_label = true;
+	}
+
+	if (is_data && is_label)
+	{
+		label_count = 0;
+		for (vector<string>::iterator it = data_table.begin(); it != data_table.end();
+			++it)
+		{
+			string tmp = *it;
+			if (!isnumber(tmp))
+			{
+				++label_count;
+				label_map[tmp]++;
+				has_label = true;
+			}
+		}
+		return ;
 	}
 
 	this->asm_code = asm_code;
@@ -449,8 +439,7 @@ void Instr::decode(string asm_code) throw(...)
 	operater = dump(strstream);
 	strstream.clear();
 
-	if (asm_map[operation] == NULL)
-		throw Exception(Exception::ion, asm_code);
+	assert (asm_map[operation] != NULL);
 	type = asm_map[operation]->type;
 	if (type == 'r')
 	{
@@ -478,15 +467,13 @@ void Instr::decode(string asm_code) throw(...)
 	while ((findex = formal.find(',',lfindex)) != string::npos)
 	{
 		oindex = operater.find(',', loindex);
-		if (oindex == string::npos)
-			throw Exception(Exception::ge, asm_code);
+		assert (oindex != string::npos);
 
 		ftmp = formal.substr(lfindex, findex - lfindex);
 		otmp = operater.substr(loindex, oindex - loindex);
 		if (ftmp == "rs")
 		{
-			if (otmp[0] != '$' || reg_map[otmp] == "")
-				throw Exception(Exception::irn, asm_code);
+			assert(!(otmp[0] != '$' || reg_map[otmp] == ""));
 			otmp = reg_map[otmp];
 			strstream << otmp.substr(1);
 			strstream >> rs;
@@ -494,8 +481,7 @@ void Instr::decode(string asm_code) throw(...)
 		}
 		else if (ftmp == "rt")
 		{
-			if (otmp[0] != '$' || reg_map[otmp] == "")
-				throw Exception(Exception::irn, asm_code);
+			assert(!(otmp[0] != '$' || reg_map[otmp] == ""));
 			otmp = reg_map[otmp];
 			strstream << otmp.substr(1);
 			strstream >> rt;
@@ -503,8 +489,7 @@ void Instr::decode(string asm_code) throw(...)
 		}
 		else if (ftmp == "rd")
 		{
-			if (otmp[0] != '$' || reg_map[otmp] == "")
-				throw Exception(Exception::irn, asm_code);
+			assert(!(otmp[0] != '$' || reg_map[otmp] == ""));
 			otmp = reg_map[otmp];
 			strstream << otmp.substr(1);
 			strstream >> rd;
@@ -512,23 +497,21 @@ void Instr::decode(string asm_code) throw(...)
 		}
 		else if (ftmp == "shamt")
 		{
-			if (!isnumber(otmp))
-				throw Exception(Exception::is, asm_code);
+			assert(isnumber(otmp));
 			strstream << otmp;
 			strstream >> shamt;
 			strstream.clear();
 		}
 		else if (ftmp == "imme")
 		{
-			if (_mayhavelable()  && islegallabel(otmp))
+			if (islegallabel(otmp))
 			{
 				label = otmp;
 				has_label = true;
 			}
-			else if (!isnumber(otmp))
-				throw Exception(Exception::ii, asm_code);
 			else
 			{
+				assert(isnumber(otmp));
 				strstream << otmp;
 				strstream >> imme;
 				strstream.clear();
@@ -536,15 +519,14 @@ void Instr::decode(string asm_code) throw(...)
 		}
 		else if (ftmp == "target")
 		{
-			if (_mayhavelable()  && islegallabel(otmp))
+			if (islegallabel(otmp))
 			{
 				label = otmp;
 				has_label = true;
 			}
-			else if (!isnumber(otmp))
-				throw Exception(Exception::it, asm_code);
 			else
 			{
+				assert(isnumber(otmp));
 				strstream << otmp;
 				strstream >> imme;
 				strstream.clear();
@@ -557,13 +539,9 @@ void Instr::decode(string asm_code) throw(...)
 	}
 }
 
-Instr::Instr(string asm_code) throw(...)
+Instr::Instr(string asm_code)
 {
-	try {
 	decode(asm_code);
-	} catch (Exception e){
-		throw e;
-	}
 }
 
 string Instr::getAsmCode() const 
@@ -600,11 +578,12 @@ unsigned int Instr::getByteCode()
 
 void Instr::sort(List<Instr> &list)
 {
-	sections.push_back("empty");
 	List<Instr> classes[10];
 	List<Instr>::iterator lit;
+	sections.push_back("__empty");
 	for (lit = list.begin(); lit != list.end() ; )
 	{
+		cout << lit->elem.section << endl;
 		for (int i = 0; i != sections.size(); ++i)
 		{
 			if (sections[i] == lit->elem.section)
@@ -613,6 +592,7 @@ void Instr::sort(List<Instr> &list)
 				break;
 			}
 		}
+		
 	}
 	for (int i = 0; i != sections.size() - 1; ++i)
 	{
@@ -644,6 +624,46 @@ void Instr::resolveAddr(List<Instr> & list)
 	}
 }
 
+void Instr::_resolvelabel(Instr &label, Instr &haslabel)
+{
+	if (haslabel.is_instr)
+	{
+		if (label.is_data)
+		{
+			assert(haslabel.type == 'i');
+			haslabel.imme = label.address;
+		}
+		else
+		{
+			if (haslabel.operation[0] == 'b')//branch instrs 
+			{
+				haslabel.imme = (label.address - haslabel.address) / 4 - 1;
+				assert((label.address - haslabel.address) % 4 == 0);
+			}
+			else if (haslabel.type == 'i')//i-type instrs except branch
+			{
+				haslabel.imme = label.address / 4;
+			}
+			else if(haslabel.type == 'j' )//j-type
+			{
+				haslabel.target = label.address / 4;
+			}
+		}
+	}
+	else if (haslabel.is_data)
+	{
+		for (auto it = haslabel.label_map.begin();
+			it != haslabel.label_map.end(); ++it)
+		{
+			if (it->first == label.label)
+			{
+				haslabel.label_count -= it->second;
+				it->second = label.address;
+			}
+		}
+	}
+}
+
 void Instr::resolveLabel(List<Instr> &list)
 {
 	List<Instr *> labels;
@@ -659,53 +679,47 @@ void Instr::resolveLabel(List<Instr> &list)
 			for (hit = haslabels.begin(); hit != haslabels.end(); )
 			{
 				Instr &haslabel = *(hit->elem);
-				if (haslabel.label == instr.label)
+				if (( haslabel.is_instr && haslabel.label == instr.label )||( haslabel.is_data 
+					&& haslabel.label_map.find(instr.label) != haslabel.label_map.end() ))
 				{
-					if (haslabel.operation[0] == 'b')//branch instrs 
-					{
-						haslabel.imme = (instr.address - haslabel.address) / 4;
-						assert((instr.address - haslabel.address) % 4 == 0);
-					}
-					else if (haslabel.type == 'i')//i-type instrs except branch
-					{
-						haslabel.imme = instr.address / 4;
-					}
-					else if(haslabel.type == 'j' )//j-type
-					{
-						haslabel.target = instr.address / 4;
-					}
-					haslabels.erase(hit);
+					_resolvelabel(instr, haslabel);
+					if (haslabel.is_instr || haslabel.is_data && haslabel.label_count == 0)
+						haslabels.erase(hit);
+					else 
+						hit = hit->next;
 				}
 				else
 					hit = hit->next;
 			}
 		}
-		else if (instr.has_label)
+		if (instr.has_label)
 		{
 			for (lit = labels.begin(); lit != labels.end(); lit = lit->next)
 			{
 				Instr &label = *(lit->elem);
-				if (label.label == instr.label)
+				if (instr.is_instr && label.label == instr.label || instr.is_data 
+					&& instr.label_map.find(instr.label) != instr.label_map.end())
 				{
-					if (instr.operation[0] == 'b')
-					{
-						instr.imme = (label.address - instr.address) / 4;
-						assert((label.address - instr.address) % 4 == 0);
-					}
-					else if (instr.type = 'b')
-					{
-						instr.imme = label.address / 4;
-					}
-					else if(instr.type == 'j')
-					{
-						instr.target = label.address / 4;
-					}
-					break;
+					_resolvelabel(label, instr);
+					if (instr.is_instr || instr.is_data && instr.label_count == 0)
+						break;
 				}
 			}
 			if (lit == labels.end())
 				haslabels.push_back(&instr);
 		}
+		//cout << instr.asm_code << endl;
+		assert(haslabels.check() == true);
+	}
+	if (!haslabels.isempty())
+	{
+		string error;
+		for (hit = haslabels.begin(); hit != haslabels.end(); hit = hit->next)
+		{
+			error += "label \"" + hit->elem->label + "\" in \"" + hit->elem->asm_code 
+				+ " cannot be resolved\n";
+		}
+		throw Exception(error, "");
 	}
 }
 
@@ -718,20 +732,33 @@ void Instr::outputInstrs(List<Instr> &list, ofstream & fout)
 		if (instr.is_instr)
 		{
 			fout.seekp(instr.address, fstream::beg);
-			unsigned byte_code = it->elem.getByteCode();
+			unsigned byte_code = instr.getByteCode();
 			char *b = (char *)&byte_code;
 			fout << b[3] << b[2] << b[1] << b[0];
 		}
 		else if (instr.is_data)
 		{
 			fout.seekp(instr.address, fstream::beg);
-			for (vector<long long>::iterator it = instr.data_table.begin();
+			for (vector<string>::iterator it = instr.data_table.begin();
 				it != instr.data_table.end(); ++it)
 			{
+				string tmp = *it;
+				int t;
+				if (isnumber(tmp))
+				{
+					stringstream strstream;
+					strstream << tmp;
+					strstream >> t;
+				}
+				else
+				{
+					t = instr.label_map[tmp];
+				}
+				char *b = (char *)&t;
 				for (int i = 0; i != instr.data_length; ++i)
 				{
-					fout << (char *)(&(*it))[instr.data_length - i];
-				}
+					fout << b[instr.data_length - i - 1];
+				}	
 			}
 		}
 	}

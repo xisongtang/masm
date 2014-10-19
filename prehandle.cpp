@@ -1,82 +1,252 @@
 #include "prehandle.h"
+#include "calculator.h"
 #include <iostream>
 #include <string>
 #include <map>
 #include <sstream>
 #include <regex>
+#include <cassert>
 #include "util.h"
 #include "exception.h"
 using namespace std;
 
 Prehandle::Prehandle()
 {
+	reg_map["$zero"] = "$0";
+	reg_map["$at"] = "$1";
+	reg_map["$v0"] = "$2";
+	reg_map["$v1"] = "$3";
+	reg_map["$a0"] = "$4";
+	reg_map["$a1"] = "$5";
+	reg_map["$a2"] = "$6";
+	reg_map["$a3"] = "$7";
+	reg_map["$t0"] = "$8";
+	reg_map["$t1"] = "$9";
+	reg_map["$t2"] = "$10";
+	reg_map["$t3"] = "$11";
+	reg_map["$t4"] = "$12";
+	reg_map["$t5"] = "$13";
+	reg_map["$t6"] = "$14";
+	reg_map["$t7"] = "$15";
+	reg_map["$s0"] = "$16";
+	reg_map["$s1"] = "$17";
+	reg_map["$s2"] = "$18";
+	reg_map["$s3"] = "$19";
+	reg_map["$s4"] = "$20";
+	reg_map["$s5"] = "$21";
+	reg_map["$s6"] = "$22";
+	reg_map["$s7"] = "$23";
+	reg_map["$t8"] = "$24";
+	reg_map["$t9"] = "$25";
+	reg_map["$k0"] = "$26";
+	reg_map["$k1"] = "$27";
+	reg_map["$gp"] = "$28";
+	reg_map["$sp"] = "$29";
+	reg_map["$fp"] = "$30";
+	reg_map["$ra"] = "$31";
+	reg_map["$0"] = "$0";
+	reg_map["$1"] = "$1";
+	reg_map["$2"] = "$2";
+	reg_map["$3"] = "$3";
+	reg_map["$4"] = "$4";
+	reg_map["$5"] = "$5";
+	reg_map["$6"] = "$6";
+	reg_map["$7"] = "$7";
+	reg_map["$8"] = "$8";
+	reg_map["$9"] = "$9";
+	reg_map["$10"] = "$10";
+	reg_map["$11"] = "$11";
+	reg_map["$12"] = "$12";
+	reg_map["$13"] = "$13";
+	reg_map["$14"] = "$14";
+	reg_map["$15"] = "$15";
+	reg_map["$16"] = "$16";
+	reg_map["$17"] = "$17";
+	reg_map["$18"] = "$18";
+	reg_map["$19"] = "$19";
+	reg_map["$20"] = "$20";
+	reg_map["$21"] = "$21";
+	reg_map["$22"] = "$22";
+	reg_map["$23"] = "$23";
+	reg_map["$24"] = "$24";
+	reg_map["$25"] = "$25";
+	reg_map["$26"] = "$26";
+	reg_map["$27"] = "$27";
+	reg_map["$28"] = "$28";
+	reg_map["$29"] = "$29";
+	reg_map["$30"] = "$30";
+	reg_map["$31"] = "$31";
+
+	pseudo_map["move"] = new PseudoRule("rt,rs", "add:rt,rs,$0");
+	pseudo_map["clear"] = new PseudoRule("rt", "add:rt,$0,$0");
+	pseudo_map["not"] = new PseudoRule("rt,rs", "nor:rt,rs,$0");
+	pseudo_map["la"] = new PseudoRule("rd,imme", "ori:rd,$0,imme");
+	pseudo_map["li"] = new PseudoRule("rd,imme", "ori:rd,$0,imme");
+	pseudo_map["b"] = new PseudoRule("imme", "beq:$0,$0,imme");
+	pseudo_map["bal"] = new PseudoRule("imme", "bgezal:$0,$0,imme");
+	pseudo_map["bgt"] = new PseudoRule("rs,rt,imme", "slt:$1,rt,rs;bne:$1,$0,imme");
+	pseudo_map["blt"] = new PseudoRule("rs,rt,imme", "slt:$1,rs,rt;bne:$1,$0,imme");
+	pseudo_map["bge"] = new PseudoRule("rs,rt,imme", "slt:$1,rs,rt;beq:$1,$0,imme");
+	pseudo_map["ble"] = new PseudoRule("rs,rt,imme", "slt:$1,rt,rs;beq:$1,$0,imme");
+	pseudo_map["bgtu"] = new PseudoRule("rs,rt,imme", "sltu:$1,rt,rs;bne:$1,$0,imme");
+	pseudo_map["bgtz"] = new PseudoRule("rs,imme", "slt:$1,$0,rs;bne:$1,$0,imme");
+	pseudo_map["beqz"] = new PseudoRule("rs,imme", "beq:rs,$0,imme");
+	pseudo_map["bnez"] = new PseudoRule("rs,imme", "bne:rs,$0,imme");
+	pseudo_map["rem"] = new PseudoRule("rd,rs,rt", "div:rs,rt;mfhi:$rd");
+	pseudo_map["push"] = new PseudoRule("rs", "sw:rs,imme($29);");
+	pseudo_map["pop"] = new PseudoRule("rs", "lw:rs,imme($29);");
+
+	format_map["addi"] = "rt,rs,imme";
+	format_map["addiu"] = "rt,rs,imme";
+	format_map["andi"] = "rt,rs,imme";
+	format_map["beq"] = "rt,rs,imme";
+	format_map["bgez"] = "rs,imme";
+	format_map["bgezal"] = "rs,imme";
+	format_map["bgtz"] = "rs,imme";
+	format_map["blez"] = "rs,imme";
+	format_map["bltz"] = "rs,imme";
+	format_map["bltzal"] = "rs,imme";
+	format_map["bne"] = "rs,imme";
+	format_map["lh"] = "rt,imme(rs)";
+	format_map["lw"] = "rt,imme(rs)";
+	format_map["ori"] = "rt,rs,imme";
+	format_map["sh"] = "rt,imme(rs)";
+	format_map["slti"] = "rt,rs,imme";
+	format_map["sw"] = "rt,imme(rs)";
+	format_map["xori"] = "rt,rs,imme";
+	format_map["j"] = "target";
+	format_map["jal"] = "target";
+	format_map["add"] = "rd,rs,rt";
+	format_map["addu"] = "rd,rs,rt";
+	format_map["and"] = "rd,rs,rt";
+	format_map["div"] = "rs,rt";
+	format_map["jalr"] = "rs,rd";
+	format_map["jr"] = "rs";
+	format_map["mfhi"] = "rd";
+	format_map["mflo"] = "rd";
+	format_map["mthi"] = "rs";
+	format_map["mtlo"] = "rs";
+	format_map["mult"] = "rs,rt";
+	format_map["or"] = "rd,rs,rt";
+	format_map["sll"] = "rd,rs,shamt";
+	format_map["sllv"] = "rd,rt,rs";
+	format_map["slt"] = "rd,rs,rt";
+	format_map["sltu"] = "rd,rs,rt";
+	format_map["sra"] = "rd,rs,shamt";
+	format_map["srav"] = "rd,rs,rt";
+	format_map["srl"] = "rd,rs,shamt";
+	format_map["srlv"] = "rd,rs,rt";
+	format_map["sub"] = "rd,rs,rt";
+	format_map["subu"] = "rd,rs,rt";
+	format_map["xor"] = "rd,rs,rt";
+	format_map["move"] = "rt,rs";
+	format_map["clear"] = "rt";
+	format_map["not"] = "rt,rs";
+	format_map["la"] = "rd,imme";
+	format_map["li"] = "rd,imme";
+	format_map["b"] = "imme";
+	format_map["bal"] = "imme";
+	format_map["bgt"] = "rs,rt,imme";
+	format_map["blt"] = "rs,rt,imme";
+	format_map["bge"] = "rs,rt,imme";
+	format_map["ble"] = "rs,rt,imme";
+	format_map["bgtu"] = "rs,rt,imme";
+	format_map["bgtz"] = "rs,imme";
+	format_map["beqz"] = "rs,imme";
+	format_map["bnez"] = "rs,imme";
+	format_map["rem"] = "rd,rs,rt";
+	format_map["syscall"] = " ";
+	format_map["push"] = "rs";
+	format_map["pop"] = "rs";
+
 	isincomment = isafterdata = hasdata = false;
-	multilinecomment = "";
+	const_map["lb"] = "lh";
+	const_map["sb"] = "sh";
+
 }
 
 string Prehandle::decode(string str) throw(...)
 {
 	string org_str = str;
+	string label = "";
 	int index;
-	bool iscommentend = false;
+	//deal with muliline comment
 	if (isincomment)
 	{
-		string t = "#";
 		if ((index = str.find("*/")) != string::npos)
 		{
-			string tmp = str.substr(0, index);
 			str = str.substr(index + 2);
-			tmp = trim(tmp);
-			tmp = trim(tmp, "\\*");
-			tmp = t + tmp;
-			multilinecomment += tmp;
 			isincomment = false;
-			iscommentend = true;
 		}
 		else
-		{
-			str = trim(str);
-			str = trim(str, "\\*");
-			str = t + str + "\n";
-			multilinecomment += str;
 			return "";
-		}
 	}
 	if ((index = str.find("/*")) != string::npos)
 	{
 		isincomment = true;
-		multilinecomment = "#";
-		multilinecomment += str.substr(index + 2);
 		str = str.substr(0, index);
-		multilinecomment = trim(multilinecomment);
-		multilinecomment = trim(multilinecomment, "\\*");
-		multilinecomment += "\n";
 	}
+	//deal with c-style one line comment
 	str = replace(str, "//", "#");
 	index = str.find('#');
 	string cmt_str;
+	//divide the comment from the instruction
 	if (index != string::npos)
 	{
 		cmt_str = trim(str.substr(index));
 		str = trim(str.substr(0, index));
 	}
-	str = tolower(str);
-	index = str.find("equ");
+	//resolve the label expression
+	if ((index = str.find(":")) != string::npos)
+	{
+		label = str.substr(0, index + 1) + "\n";
+		str = str.substr(index + 1);
+	}
+	str = trim(str);
+	str = replace(str, "\t", " ");
+
+	//change the char to ascii number
+	while (true)
+	{
+		stringstream strstream;
+		regex re("'(.)'", regex::icase);
+		smatch sm;
+		regex_search(str, sm, re);
+		if (sm.empty())
+			break;
+		strstream << (int)(sm[1].str()[0]);
+		string ascii;
+		strstream >> ascii;
+		str = sm.prefix().str() + ascii + sm.suffix().str();
+	}
+	//take the equ expression's information
+	index = find(str, "equ");
 	if (index != string::npos)
 	{
 		string name;
 		string value;
 		name = trim(str.substr(0, index));
 		value = trim(str.substr(index+4));
+		if (value.size() == 0 || name.size() == 0)
+			throw Exception("Invalid use of equ expression", org_str);
+		if (Calculator::isequation(value))
+		{
+			Calculator calc(value);
+			stringstream strstream;
+			strstream << calc.exec();
+			strstream >> value;
+		}
 		const_map[name] = value;
-		return cmt_str + "\n";
+		return "";
 	}
+
+	//resolve the dup expression
 	while (true)
 	{
 		stringstream strstream;
 		if (!has(str, "dup"))
 			break;
-		regex re("([0-9]*) dup\\((.*?)\\)");
+		regex re("([0-9]*) dup\\((.*?)\\)", regex::icase);
 		smatch sm;
 		regex_search(str, sm, re);
 		if (sm.empty())
@@ -93,40 +263,238 @@ string Prehandle::decode(string str) throw(...)
 		}
 		str = sm.prefix().str() + tmp + sm.suffix().str();
 	}
+
+	//resolve the value symlized by equ expressiona
 	for (map<string, string>::iterator it = const_map.begin(); it != const_map.end(); ++it)
 	{
 		if (has(str, it->first))
 			str = replace(str, it->first, it->second);
 	}
-	smatch sm = find(str, "\\.([248]byte)?(ascii(?:z))?(space)?");
-	string suffix = trim(sm.suffix());
-	string prefix = trim(sm.prefix());
+
+	//resolve the multiline data
+	smatch sm;
+	find(str, "\\.([248]byte|ascii(?:z)|space)\\b", sm);
+	string suffix = trim(sm.suffix().str());
+	string prefix = trim(sm.prefix().str());
 	if (isafterdata)
 	{
 		if (!sm.empty() && prefix.size() == 0)
 		{
 			suffix = decodesuffix(suffix);
-			multilinedata += suffix;
-			return cmt_str + "\n";
+			multilinedata += "," + suffix;
+			return "";
 		}
-		multilinedata += commentafterdata + "\n";
-		isafterdata == false;
+		multilinedata += "\n";
+		isafterdata = false;
 	}
 	if (!sm.empty())
 	{
-		isafterdata == true;
+		if (!isafterdata && hasdata)
+		{
+			isafterdata = true;
+			hasdata = true;
+			string tmp = multilinedata;
+			multilinedata = prefix + " " + sm[0].str() + " " + decodesuffix(suffix);
+			return tmp;
+		}
+		isafterdata = true;
 		hasdata = true;
-		multilinedata = prefix + sm[0].str() + decodesuffix(suffix);
-		commentafterdata = cmt_str;
-		return 
+		multilinedata = prefix + " " + sm[0].str() + " " + decodesuffix(suffix);
+		return "";
 	}
 
-	if (iscommentend)
+	//resolve the .origin expression
+	if ((index = str.find(".origin")) != string::npos)
 	{
-		return multilinecomment + str + cmt_str + "\n";
+		string num = str.substr(8);
+		if (index > 0)
+			throw Exception("Invalid use of '.origin'", org_str);
+		if (num.size() == 0)
+			throw Exception("Invalid use of '.origin', lack of a number or label after it", org_str);
 	}
-	if (isincomment)
-		return str + cmt_str;
-	else 
-		return str + cmt_str + "\n";
+	//resolve the section expression
+	else if((index = str.find(".")) != string::npos)
+	{
+		if (index != 0)
+			throw Exception("unaccepted data unit", org_str);
+		stringstream strstream;
+		string label, suffix;
+		strstream << str;
+		strstream >> label >> suffix;
+		if (suffix.size() != 0)
+			throw Exception("Invalid use of section: " + label, org_str);
+	}
+	//the instructions;
+	else if (str.size())
+	{
+		stringstream strstream;
+		strstream << str;
+		string operation, operater;
+		strstream >> operation;
+		operater = dump(strstream);
+		strstream.clear();
+
+		if (format_map[operation] == "")
+			throw Exception(Exception::ion + ":" + operation, org_str);
+		string format = format_map[operation];
+		string ftmp;
+		string otmp;
+		string tmp;
+		int lfindex = 0;
+		int loindex = 0;
+		int findex;
+		int oindex;
+		operater = replace(operater, " ", "");
+		operater = replace(operater, "(", ",");
+		format = replace(format, "(", ",");
+		operater = replace(operater, ")", "");
+		format = replace(format, ")", "");
+		operater += ",";
+		format += ",";
+		while ((findex = format.find(',',lfindex)) != string::npos)
+		{
+			oindex = operater.find(',', loindex);
+				
+			if (oindex == string::npos)
+			{
+				if (operation == "push" || operation == "pop")
+					break;
+				throw Exception(Exception::ge, org_str);
+			}
+
+			ftmp = trim(format.substr(lfindex, findex - lfindex));
+			otmp = trim(operater.substr(loindex, oindex - loindex));
+			if (ftmp == "rs")
+			{
+				if (otmp[0] != '$' || reg_map[otmp] == "")
+					throw Exception(Exception::irn, org_str);
+			}
+			else if (ftmp == "rt")
+			{
+				if (otmp[0] != '$' || reg_map[otmp] == "")
+					throw Exception(Exception::irn, org_str);
+			}
+			else if (ftmp == "rd")
+			{
+				if (otmp[0] != '$' || reg_map[otmp] == "")
+					throw Exception(Exception::irn, org_str);
+			}
+			else if (ftmp == "shamt")
+			{
+				if (Calculator::isequation(otmp))
+				{
+					string tmp;
+					Calculator calc(otmp);
+					strstream << calc.exec();
+					strstream >> tmp;
+					replace(str, otmp, tmp);
+				}
+				else if (!isnumber(otmp))
+					throw Exception(Exception::is, org_str);
+			}
+			else if (ftmp == "imme")
+			{
+				if (Calculator::isequation(otmp))
+				{
+					string tmp;
+					Calculator calc(otmp);
+					strstream << calc.exec();
+					strstream >> tmp;
+					replace(str, otmp, tmp);
+				}
+				else if (islegallabel(otmp))
+					;
+				else if (!isnumber(otmp))
+					throw Exception(Exception::ii, org_str);
+			}
+			else if (ftmp == "target")
+			{
+				if (Calculator::isequation(otmp))
+				{
+					string tmp;
+					Calculator calc(otmp);
+					strstream << calc.exec();
+					strstream >> tmp;
+					replace(str, otmp, tmp);
+				}
+				else if (islegallabel(otmp))
+					;
+				else if (!isnumber(otmp))
+					throw Exception(Exception::it, org_str);
+			}
+			else if (operation != "syscall")
+				assert(1 == 0);
+			loindex = oindex + 1;
+
+			if (operation == "push" || operation == "pop")
+				lfindex = 0;
+			else
+				lfindex = findex + 1;
+		}
+		//translate the pseudo codes to basic codes
+		if (pseudo_map[operation])
+		{
+			string format = pseudo_map[operation]->pseudo;
+			string des = pseudo_map[operation]->format;
+			string ftmp;
+			string otmp;
+			string tmp;
+			int lfindex = 0;
+			int loindex = 0;
+			int findex;
+			int oindex;
+			format = replace(format, "(", ",");
+			format = replace(format, ")", "");
+			format += ",";
+			des = replace(des, ":", " ");
+			des = replace(des, ";", "\n");
+			str = "";
+			int offset = 0;
+			while ((findex = format.find(',',lfindex)) != string::npos)
+			{
+				oindex = operater.find(',', loindex);
+				if (oindex == string::npos)
+					break;
+				ftmp = trim(format.substr(lfindex, findex - lfindex));
+				otmp = trim(operater.substr(loindex, oindex - loindex));
+				if (operation == "push" || operation == "pop")
+				{
+					strstream << offset;
+					str += replace(des, ftmp, otmp);
+					strstream >> otmp;
+					strstream.clear();
+					str = replace(str, "imme", otmp);
+					offset += 2;
+					lfindex = 0;
+				}
+				else
+				{
+					des = replace(des, ftmp, otmp);
+					lfindex = findex + 1;
+				}
+				loindex = oindex + 1;
+			}
+			if (operation == "push" || operation == "pop")
+			{
+				string tmp;
+				strstream << offset;
+				strstream >> tmp;
+				str = str.substr(0, str.size() - 1);
+				if (operation == "push")
+					str = "addi $29,$29,-" + tmp + "\n" + str;
+				else
+					str += "\naddi $29,$29," + tmp;
+			}
+			else 
+				str = des;
+		}
+	}
+	if (str.size() != 0)
+		str += "\n";
+	if(hasdata)
+	{
+		hasdata = false;
+		return multilinedata + label + str;
+	}
+	return label + str;
 }

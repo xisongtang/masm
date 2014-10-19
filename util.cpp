@@ -1,4 +1,5 @@
 #include "util.h"
+#include "calculator.h"
 #include <string>
 #include <sstream>
 #include <regex>
@@ -9,10 +10,10 @@ using namespace std;
 
 string replace(string source, string e, string c)
 {
-	int index = 0;
-	while ( (index = source.find(e, index)) != string::npos)
+	int index = -1;
+	while ( (index = source.find(e, index + 1)) != string::npos)
 	{
-		source.replace(index, e.length(), c);
+		source.replace(index, e.size(), c);
 	}
 	return source;
 }
@@ -30,21 +31,41 @@ string dump(stringstream &strstream)
 bool isnumber(const string &number)
 {
 	string _number = number;
-	if (_number.size() > 1 && _number[0] == '-')
+	int scale = 10;
+	if (_number.size() > 1 && (_number[0] == '-' || _number[0] == '+'))
 		_number = _number.substr(1);
 	if (_number.size() > 2 && _number[0] == '0' && _number[1] == 'x')
-		_number = _number.substr(2);
-	for (string::const_iterator it = _number.begin(); it != _number.end(); ++it)
 	{
-		if (!isdigit(*it))
-			return false;
+		scale = 16;
+		_number = _number.substr(2);
 	}
-	return true;
+	else if (_number.size() > 1 && _number[0] == '0')
+	{
+		scale = 8;
+		_number = _number.substr(1);
+	}
+	bool result;
+	if (scale == 16)
+	{
+		regex re("[0-9A-Ba-b]+");
+		result = regex_match(_number, re);
+	}
+	else if (scale == 10)
+	{
+		regex re("[0-9]+");
+		result = regex_match(_number, re);
+	}
+	else 
+	{
+		regex re("[0-7]+");
+		result = regex_match(_number, re);
+	}
+	return result;
 }
 
 bool islegallabel(const string &label)
 {
-	return !isdigit(label[0]);
+	return !isdigit(label[0]) && label[0] != '-';
 }
 
 string tolower(string str)
@@ -80,51 +101,84 @@ string trim(string str, string reg)
 	return str;
 }
 
-vector<long long> split(string src, string s)
+vector<string> split(string src, string s)
 {
-	vector<long long> vs;
+	vector<string> vs;
 	string tmp = "(.*?)\\" + s;
+	if (trim(src).size() == 0)
+	{
+		vs.push_back("0");
+		return vs;
+	}
 	regex re(tmp);
 	smatch sm;
-	int i;
-	stringstream strstream;
 	while (regex_search(src, sm, re))
 	{
-		strstream << sm[1];
+		vs.push_back(sm[1]);
 		src = sm.suffix();
-		strstream >> i;
-		strstream.clear();
-		vs.push_back(i);
 	}
-	strstream << src;
-	strstream >> i;
-	vs.push_back(i);
+	vs.push_back(src);
 	return vs;
 }
 
-smatch find(string str, string restr)
+void find(const string &str, string restr, smatch &sm)
 {
-	regex re(restr);
+	regex re(restr, regex::icase);
+	regex_search(str, sm, re);
+}
+
+int find(const string &str, string restr)
+{
+	regex re(restr, regex::icase);
 	smatch sm;
 	regex_search(str, sm, re);
-	return sm;
+	if (sm.empty())
+		return -1;
+	return sm.prefix().length();
 }
 
 string decodesuffix(string str)
 {
 	regex re("\"(.*?)\"");
 	smatch sm;
+	stringstream strstream;
 	while (regex_search(str, sm, re))
 	{
 		string rep = sm[1];
 		string des = "";
 		for (int i = 0; i != rep.size(); ++i)
 		{
-			des += int(rep[i]);
+			string tmp;
+			strstream << (int)rep[i];
+			strstream >> tmp;
+			des += tmp;
+			strstream.clear();
 			if (i != rep.size() - 1)
 				des += ",";
 		}
 		str = sm.prefix().str() + des + sm.suffix().str();
 	}
+	str = replace(str, " ", "");
+
+	vector<string> vs = split(str);
+	str = "";
+	for (vector<string>::iterator it = vs.begin(); it != vs.end();
+			++it)
+	{
+		string tmp = *it;
+		if (!Calculator::isequation(tmp))
+			;
+		else 
+		{
+			Calculator calc(tmp);
+			strstream << calc.exec();
+			strstream >> tmp;
+		}
+		str += tmp;
+		if (it + 1 != vs.end())
+			str += ",";
+	}
 	return str;
 }
+
+

@@ -1,15 +1,15 @@
-#include "list.h"
 #include "control.h"
-#include <regex>
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include "calculator.h"
 using namespace std;
 #ifdef TEST
 
 int main()
 {
-	regex re("\\.([248]byte)?(ascii(?:z))?(space)?");
-	smatch sm;
-	string str = "12123";
-	regex_search(str, sm, re);
-	return 0;
+	Calculator calc("-1 >> 33");
+	cout << calc.exec();
+	system("pause");
 }
 #endif

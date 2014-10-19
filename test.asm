@@ -2,7 +2,7 @@
 * MIPS系统程序。2013.12.26.Q.
 * 弹指一挥双甲子，改天换地全仗君
 *****************************************/
-INTadr	equ	1024	#系统程序起始地址
+INTadr	equ	0+1 * 2 + ~5*(3+4-2)	#系统程序起始地址
 KEYBOARD	equ	1000	#键盘I/O地址
 IntEnable	equ	0x80000000	
 STATUs	equ	12	#状态标志寄存器
@@ -10,23 +10,23 @@ CAUSE	equ	13	#中断原因寄存器
 EPC	equ	14	#中断返回寄存器
 .origin	0	
 j	InitOS	
-/*IntVtTable	.4byte	INT00s,	INT01s	//int 00, 01
-.4byte	INT02s,	INT03s	//int 02, 03
-.4byte	INT04s,	INT05s	//int 04, 05
-.4byte	INT06s,	INT07s	//int 06, 07
+IntVtTable	.4byte	0,	0+1 * 2 + ~5*(3+4-2)	//int 00, 01
+.4byte	0,	0	//int 02, 03
+.4byte	0,	0	//int 04, 05
+.4byte	0,	0	//int 06, 07
 .4byte	syscal,	intkb	//int 08, 09
-.4byte	INT0As,	INT0Bs	//int 0a, 0b
-.4byte	INT0Cs,	INT0Ds	//int
-.4byte	INT0Es,	INT0Fs	//int 0e, 0f
-.4byte	INT10s,	INT11s	//int 10, 11
-.4byte	INT12s,	INT13s	//int 12, 13
-.4byte	INT14s,	INT15s	//int 14, 15
-.4byte	INT16s,	INT17s	//int 16, 17
-.4byte	INT18s,	INT19s	//int 18, 19
-.4byte	INT1As,	INT1Bs	//int 1a, 1b
-.4byte	INT1Cs,	INT1Ds	//int 1c, 1d
-.4byte	INT1Es,	INT1Fs	//int 1e, 1f
-*/
+.4byte	0,	0	//int 0a, 0b
+.4byte	0,	0	//int
+.4byte	0,	0	//int 0e, 0f
+.4byte	0,	0	//int 10, 11
+.4byte	0,	0	//int 12, 13
+.4byte	0,	0	//int 14, 15
+.4byte	0,	0	//int 16, 17
+.4byte	0,	0	//int 18, 19
+.4byte	0,	0	//int 1a, 1b
+.4byte	0,	0	//int 1c, 1d
+.4byte	0,	0	//int 1e, 1f
+
 #.origin	1024
 .data	
 
@@ -37,7 +37,7 @@ HEIGHT	.2byte	25	#屏幕字符行数
 CurCOL	.2byte	20	#当前光标列x
 CurROW	.2byte	10	#当前光标行y
 SCRmod	.2byte	0	#当前屏幕方式，0=文本
-hi	.byte	"Hello'2013", 13, "Mips CPU", 13, "ZheJiang University",0	
+hi	.2byte	"Hello'2013", 13, "Mips CPU", 13, "ZheJiang University",0	
 INTnum	.2byte	16,0	#系统允许中断数、当前
 kyptr	.2byte	kybuf,	kybuf	#键盘缓冲区首指针、尾指针
 kybuf	.2byte	1,2,3,4,5,6,7,8	#16个字符32B键盘缓冲区
@@ -45,8 +45,7 @@ kybuf	.2byte	1,2,3,4,5,6,7,8	#16个字符32B键盘缓冲区
 
 .origin	INTadr	
 INTvect:	#中断总入口
-push	$ra,$s0,$t0	
-mfc0	$s0,Cause	#取中断号
+push	$ra,$s0,$t0	 
 la	$t0,INTnum	
 lh	$t0,0($t0)	#取中断数
 sltu	$t0,$s0,$t0	#比较
@@ -55,7 +54,6 @@ sll	$s0,$s0,2
 lw	$s0,IntVtTable($s0)	#转相应
 jalr	$s0,$ra	
 EXIT:	pop	$ra,$s0,$t0	
-eret	
 
 intkb:	#键盘中断
 push	$t0,$s0,$s1	
@@ -77,12 +75,9 @@ jr	$ra
 
 READchar:	#syscall
 push	$t0,$s0,$s1	
-mfc0	$t0,EPC	
 push	$t0	
-mfc0	$t0,STATUs	
 sll	$t0,$t0,1	
 srl	$t0,$t0,1	#0:允许中断
-mtc0	$t0,STATUs	
 la	$t0,kyptr	#键盘指针
 lh	$s1,2($t0)	#尾指针
 Rb1:	lh	$s0,0($t0)	#首指针
@@ -95,12 +90,8 @@ addi	$s1,$s1,-32	#等于折返
 Rb2:	lh	$a0,0($s1)	#返回: $a0
 la	$t0,kyptr	#键盘指针
 sh	$s1,2($t0)	#写尾指针
-mfc0	$s0,STATUs	
-lui	$t0,0x8000	
 or	$s0,$s0,$t0	#1:禁止中断
-mtc0	$s0,STATUs	
 pop	$t0	
-mtc0	$t0,EPC	
 pop	$t0,$s0,$s1	
 jr	$ra	
 
@@ -111,47 +102,13 @@ add	$s1,$s0,$a1	#缓冲区末地址
 addi	$t0,$zero,13	#回车
 Rm1:	jal	READchar	
 sb	$a0,0($s0)	
-addi	$s0,$s0,1	
+addi	$s0,$s0,0+1 * 2 + ~5*(3+4-2)
 beq	$a0,$t0,Rm9	#回车结束
 bne	$s0,$s1,Rm1	#不满继续
 Rm9:	pop	$ra,$a0,$t0,$s0,$s1	
 jr	$ra	 
 
 syscal:	#系统功能调用
-addi	$v0,$v0,-1	
-beqz	$v0,PRINTint	//1
-addi	$v0,$v0,-1	
-beqz	$v0,PRINTfloat	//2
-addi	$v0,$v0,-1	
-beqz	$v0,PRINTdouble	//3
-addi	$v0,$v0,-1	
-beqz	$v0,PRINTstring	//4
-addi	$v0,$v0,-1	
-beqz	$v0,READint	//5
-addi	$v0,$v0,-1	
-beqz	$v0,READfloat	//6
-addi	$v0,$v0,-1	
-beqz	$v0,READdouble	//7
-addi	$v0,$v0,-1	
-beqz	$v0,READstring	//8
-addi	$v0,$v0,-1	
-beqz	$v0,sysBreak	//9
-addi	$v0,$v0,-1	
-beqz	$v0,sysExit	//10
-addi	$v0,$v0,-1	
-beqz	$v0,PRINTchar	//11
-addi	$v0,$v0,-1	
-beqz	$v0,READchar	//12
-addi	$v0,$v0,-1	
-beqz	$v0,FILEopen	//13
-addi	$v0,$v0,-1	
-beqz	$v0,FILEread	//14
-addi	$v0,$v0,-1	
-beqz	$v0,FILEwrite	//15
-addi	$v0,$v0,-1	
-beqz	$v0,FILEclose	//16
-addi	$v0,$v0,-1	
-beqz	$v0,sysExit2	//17
 jr	$ra	
 
 dispCHxy:	#在(x,y)显示字符

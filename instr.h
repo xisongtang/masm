@@ -27,16 +27,16 @@ struct rule
 class Instr{
 public:
 	Instr();
-	Instr(std::string) throw(...);
+	Instr(std::string) ;
 	Instr(unsigned int);
-	void decode (std::string) throw(...);
+	void decode (std::string) ;
 	void decode (unsigned int);
 
 	std::string getAsmCode() const;
 	unsigned int getByteCode();
 	static void sort(List<Instr> &);
 	static void resolveAddr(List<Instr> &);
-	static void resolveLabel(List<Instr> &);
+	static void resolveLabel(List<Instr> &) throw(...);
 	static void outputInstrs(List<Instr> &, std::ofstream &);
 private:
 	static std::map<std::string, rule*> asm_map;
@@ -50,7 +50,8 @@ private:
 	bool _mayhavelable();
 	static void initialize_map();
 	static bool is_map_initialized;
-	
+	static void _resolvelabel(Instr &instr, Instr &haslabel);
+
 	unsigned int opcode;
 	char type;
 	unsigned int rs;
@@ -62,7 +63,6 @@ private:
 	int imme;
 	int target;
 	bool has_label;
-	bool has_comment;
 	bool is_align;
 	bool is_instr;
 	bool is_label;
@@ -76,7 +76,9 @@ private:
 	std::string label;
 	std::string asm_code;
 	std::string comment;
-	std::vector<long long> data_table;
+	std::vector<std::string> data_table;
+	std::map<std::string, int>label_map;
+	int label_count;
 };
 
 #endif 

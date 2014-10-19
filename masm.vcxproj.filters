@@ -36,12 +36,12 @@
     <ClCompile Include="test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="calculator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="exception.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
@@ -54,6 +54,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="list.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="exception.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="calculator.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,13 +9,23 @@ public:
 	Prehandle();
 	std::string decode(std::string) throw(...);
 private:
+	struct PseudoRule{
+		PseudoRule(std::string pseudo, std::string format)
+		{
+			this->pseudo = pseudo;
+			this->format = format;
+		}
+		std::string pseudo;
+		std::string format;
+	};
+	std::map <std::string, std::string> reg_map;
+	std::map <std::string, std::string> format_map;
+	std::map <std::string, PseudoRule *> pseudo_map;
 	std::map <std::string, std::string> const_map;
 	bool isincomment;
 	bool isafterdata;
 	bool hasdata;
-	std::string multilinecomment;
 	std::string multilinedata;
-	std::string commentafterdata;
 };
 
 #endif
