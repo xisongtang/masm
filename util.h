@@ -5,7 +5,7 @@
 #include <vector>
 #include <regex>
 
-std::string replace(std::string source, std::string e, std::string c);
+std::string replace(std::string source, std::string e, std::string c, bool whole = false);
 std::string dump(std::stringstream &strstream);
 bool isnumber(const std::string &number);
 bool islegallabel(const std::string &label);

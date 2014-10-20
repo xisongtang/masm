@@ -16,17 +16,36 @@ using namespace std;
 
 int main(int argc, char *args[])
 {
-	if (argc == 1)
+	bool tmpoutput = false;
+	bool finnamein = false;
+	string finname = "", foutname = "a.exe";
+	for (int i = 1; i != ((argc > 4)? 4: argc); ++i)
 	{
-		cerr << "error: Please enter the file name" << endl;
-		return 1;
+		string tmp = args[i];
+		if (tmp.size() > 1 && tmp[0] == '-')
+		{
+				if (tmp == "-t" || tmp == "-temp" )
+					tmpoutput = true;
+				else 
+				{
+					cerr << "unknown option: " + tmp << endl;
+					return 0;
+				}
+		}
+		else if (finnamein)
+			foutname = tmp;
+		else 
+		{
+			finnamein = true;
+			finname = tmp;
+		}
 	}
-	string finname = args[1];
-	string foutname = "a.asm";
 	string ftoutname = split(finname,".")[0] + ".obj";
-	if (argc >= 3)
-		foutname = args[2];
-	
+	if (!finnamein)
+	{
+		cerr << "no input file" << endl;
+		return 0;
+	}
 	char buffer[MAXLEN];
 	string content;
 	unsigned offset = 0;
@@ -34,7 +53,9 @@ int main(int argc, char *args[])
 	unsigned lablenumber = 0;
 	stringstream strstream;
 	ifstream fin(finname);
-	ofstream ftout(ftoutname);
+	ofstream ftout;
+	if (tmpoutput)
+		ftout.open(ftoutname);
 	bool has_error = false;
 	
 	Prehandle prehandler;
@@ -45,18 +66,22 @@ int main(int argc, char *args[])
 		fin.getline(buffer, MAXLEN);
 		try
 		{
-			//cout << buffer << endl;
-			ftout << prehandler.decode(buffer);
+			if (tmpoutput)
+				ftout << prehandler.decode(buffer);
+			else 
+				strstream << prehandler.decode(buffer);
 		}
 		catch (Exception &e)
 		{
 			e.setLine(line);
 			e.printError();
+			if (tmpoutput)
+				ftout << buffer << "#error: " << e.getError() << endl;
 			has_error = true;
 		}
 	}
-	
-	ftout.close();
+	if (tmpoutput)
+		ftout.close();
 	cout << "preproccess finished" << endl;
 	if (has_error)
 	{
@@ -64,17 +89,26 @@ int main(int argc, char *args[])
 		exit(1);
 	}
 	fin.close();
-	fin.open(ftoutname);
+	if (tmpoutput)
+		fin.open(ftoutname);
 	
 	List<Instr> instrs;
-	
-	while (!fin.eof())
-	{
-		fin.getline(buffer,MAXLEN);
-		Instr cur;
-		cur.decode(buffer);
-		instrs.push_back(cur);
-	}
+	if (tmpoutput)
+		while (!fin.eof())
+		{
+			fin.getline(buffer,MAXLEN);
+			Instr cur;
+			cur.decode(buffer);
+			instrs.push_back(cur);
+		}
+	else
+		while (!strstream.eof())
+		{
+			strstream.getline(buffer,MAXLEN);
+			Instr cur;
+			cur.decode(buffer);
+			instrs.push_back(cur);
+		}
 	cout << "instrs decoding finished" << endl;
 	Instr::sort(instrs);
 	cout << "instrs' block sorting finished" << endl;
@@ -86,7 +120,8 @@ int main(int argc, char *args[])
 	}catch(Exception e)
 	{
 		e.printError();
-		throw e;
+		system("pause");
+		exit(1);
 	}
 
 	ofstream fout(foutname, ofstream::binary);
@@ -94,6 +129,7 @@ int main(int argc, char *args[])
 	cout << "binary file output finished" << endl;
 	fout.close();
 	system("pause");
+	return 0;
 }
 
 #endif

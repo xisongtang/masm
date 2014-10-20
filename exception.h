@@ -31,6 +31,10 @@ public:
 		std::cerr << ((line != -1)?lstr:"") << ((code != "")?cstr:"") << "error:"
 			<< error << std::endl;
 	}
+	std::string getError()const
+	{
+		return error;
+	}
 	Exception(){}
 	~Exception(){}
 	static std::string ion;//illegal operation name

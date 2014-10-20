@@ -25,6 +25,7 @@ private:
 	bool isincomment;
 	bool isafterdata;
 	bool hasdata;
+	std::string multilinetype;
 	std::string multilinedata;
 };
 

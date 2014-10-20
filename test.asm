@@ -9,6 +9,7 @@ STATUs	equ	12	#状态标志寄存器
 CAUSE	equ	13	#中断原因寄存器
 EPC	equ	14	#中断返回寄存器
 .origin	0	
+.end __End
 j	InitOS	
 IntVtTable	.4byte	0,	0+1 * 2 + ~5*(3+4-2)	//int 00, 01
 .4byte	0,	0	//int 02, 03
@@ -121,7 +122,7 @@ beqz	$t0,Rc1
 add	$t1,$t1,$s0	
 Rc1:	sll	$s0,$s0,1	
 srl	$a1,$a1,1	
-bnez	$a1,Rc0	
+bnez	$a,Rc0	
 add	$t1,$t1,$a2	#+COL
 la	$t0,CRTadr	
 lw	$t0,0($t0)	
@@ -222,11 +223,11 @@ addi	$s0,$s0,1
 j	Rn1	
 Rn9:	pop	$ra,$a0,$s0	
 jr	$ra
-
 InitOS:	#系统初始化
 jal	clr	#清屏
 HelloWorld:	#显示字符串
 la	$a0,hi	
+__End:
 li	$v0,4	
 syscall	
 RRRR:	li	$v0,12	
@@ -236,3 +237,5 @@ syscall
 j	RRRR	
 li	$v0,12	
 syscall
+
+addi $1,$0,1

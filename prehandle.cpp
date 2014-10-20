@@ -92,9 +92,10 @@ Prehandle::Prehandle()
 	pseudo_map["bgtz"] = new PseudoRule("rs,imme", "slt:$1,$0,rs;bne:$1,$0,imme");
 	pseudo_map["beqz"] = new PseudoRule("rs,imme", "beq:rs,$0,imme");
 	pseudo_map["bnez"] = new PseudoRule("rs,imme", "bne:rs,$0,imme");
-	pseudo_map["rem"] = new PseudoRule("rd,rs,rt", "div:rs,rt;mfhi:$rd");
+	pseudo_map["rem"] = new PseudoRule("rd,rs,rt", "div:rs,rt;mfhi:rd");
 	pseudo_map["push"] = new PseudoRule("rs", "sw:rs,imme($29);");
 	pseudo_map["pop"] = new PseudoRule("rs", "lw:rs,imme($29);");
+	pseudo_map["lui"] = new PseudoRule("rd,imme", "addi:$1,$0,imme;sll:rd,$1,16");
 
 	format_map["addi"] = "rt,rs,imme";
 	format_map["addiu"] = "rt,rs,imme";
@@ -209,11 +210,13 @@ string Prehandle::decode(string str) throw(...)
 	while (true)
 	{
 		stringstream strstream;
-		regex re("'(.)'", regex::icase);
+		regex re("'(.*?)'", regex::icase);
 		smatch sm;
 		regex_search(str, sm, re);
 		if (sm.empty())
 			break;
+		if (sm[1].length() > 1)
+			throw Exception("Invalid character format: it should be only one character", org_str);
 		strstream << (int)(sm[1].str()[0]);
 		string ascii;
 		strstream >> ascii;
@@ -268,49 +271,86 @@ string Prehandle::decode(string str) throw(...)
 	for (map<string, string>::iterator it = const_map.begin(); it != const_map.end(); ++it)
 	{
 		if (has(str, it->first))
-			str = replace(str, it->first, it->second);
+			str = replace(str, it->first, it->second, true);
 	}
 
 	//resolve the multiline data
 	smatch sm;
-	find(str, "\\.([248]byte|ascii(?:z)|space)\\b", sm);
+	find(str, "\\.([248]byte|byte|ascii|asciiz|space|half|word|dword)\\b", sm);
 	string suffix = trim(sm.suffix().str());
 	string prefix = trim(sm.prefix().str());
+	string matched = sm[0];
+	//if the line before contains data definition
 	if (isafterdata)
 	{
+		// if this line follows the past definition
 		if (!sm.empty() && prefix.size() == 0)
 		{
+			if (multilinetype != matched)
+				throw Exception("Invalid format of multi-line data definition", org_str);
 			suffix = decodesuffix(suffix);
 			multilinedata += "," + suffix;
 			return "";
 		}
+		// if not
 		multilinedata += "\n";
 		isafterdata = false;
 	}
+	//if not after data or after data but not follows the past definition
 	if (!sm.empty())
 	{
+		//if after but not follows the past definition
+		if (matched == ".byte")
+			matched = ".2byte";
+		else if (matched == ".ascii")
+			matched = ".2byte";
+		else if (matched == ".word")
+			matched = ".4byte";
+		else if (matched == ".half")
+			matched = ".2byte";
+		else if (matched == ".dword")
+			matched = ".8byte";
+		else if (matched == ".asciiz")
+		{
+			matched = ".2byte";
+			suffix += ",0";
+		}
 		if (!isafterdata && hasdata)
 		{
 			isafterdata = true;
 			hasdata = true;
 			string tmp = multilinedata;
-			multilinedata = prefix + " " + sm[0].str() + " " + decodesuffix(suffix);
+			multilinetype = matched;
+			multilinedata = prefix + " " + matched + " " + decodesuffix(suffix);
 			return tmp;
 		}
+		//if not after
 		isafterdata = true;
 		hasdata = true;
-		multilinedata = prefix + " " + sm[0].str() + " " + decodesuffix(suffix);
+		multilinetype = matched;
+		multilinedata = prefix + " " + matched + " " + decodesuffix(suffix);
 		return "";
 	}
 
 	//resolve the .origin expression
 	if ((index = str.find(".origin")) != string::npos)
 	{
-		string num = str.substr(8);
+		string num = trim(str.substr(8));
 		if (index > 0)
 			throw Exception("Invalid use of '.origin'", org_str);
 		if (num.size() == 0)
-			throw Exception("Invalid use of '.origin', lack of a number or label after it", org_str);
+			throw Exception("Invalid use of '.origin', lack of a number", org_str);
+		if (!isnumber(num))
+			throw Exception("Invalid use of '.origin', invalid number '" + num + "' after it", org_str);
+	}else if ((index = str.find(".end")) != string::npos)
+	{
+		string label = str.substr(5);
+		if (index > 0)
+			throw Exception("Invalid use of '.end'", org_str);
+		if (label.size() == 0)
+			throw Exception("Invalid use of '.end', lack of a label after it", org_str);
+		if (!islegallabel(label))
+			throw Exception("Invalid use of '.end', invalid label '" + label + "' after it", org_str);
 	}
 	//resolve the section expression
 	else if((index = str.find(".")) != string::npos)
@@ -364,12 +404,12 @@ string Prehandle::decode(string str) throw(...)
 			regexstr = replace(regexstr, " ", "");
 			regexstr = replace(regexstr, "(", "\\(");
 			regexstr = replace(regexstr, ")", "\\)");
-			regexstr = replace(regexstr, "rs", "(.*)");
-			regexstr = replace(regexstr, "rt", "(.*)");
-			regexstr = replace(regexstr, "rd", "(.*)");
-			regexstr = replace(regexstr, "imme", "(.*)");
-			regexstr = replace(regexstr, "target", "(.*)");
-			regexstr = replace(regexstr, "shamt", "(.*)");
+			regexstr = replace(regexstr, "rs", "(.*?)");
+			regexstr = replace(regexstr, "rt", "(.*?)");
+			regexstr = replace(regexstr, "rd", "(.*?)");
+			regexstr = replace(regexstr, "imme", "(.*?)");
+			regexstr = replace(regexstr, "target", "(.*?)");
+			regexstr = replace(regexstr, "shamt", "(.*?)");
 		}
 		regex re(regexstr);
 		smatch opsm, fmsm;
@@ -379,22 +419,22 @@ string Prehandle::decode(string str) throw(...)
 		for (int i = 1; i != opsm.size(); ++i)
 		{
 			string otmp, ftmp;
-			otmp = trim(opsm[i].str());
+			otmp = tolower(trim(opsm[i].str()));
 			ftmp = trim(fmsm[i].str());
 			if (ftmp == "rs")
 			{
 				if (otmp[0] != '$' || reg_map[otmp] == "")
-					throw Exception(Exception::irn, org_str);
+					throw Exception(Exception::irn + ": " + otmp, org_str);
 			}
 			else if (ftmp == "rt")
 			{
 				if (otmp[0] != '$' || reg_map[otmp] == "")
-					throw Exception(Exception::irn, org_str);
+					throw Exception(Exception::irn + ": " + otmp, org_str);
 			}
 			else if (ftmp == "rd")
 			{
 				if (otmp[0] != '$' || reg_map[otmp] == "")
-					throw Exception(Exception::irn, org_str);
+					throw Exception(Exception::irn + ": " + otmp, org_str);
 			}
 			else if (ftmp == "shamt")
 			{

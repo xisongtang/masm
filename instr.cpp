@@ -28,7 +28,7 @@ void Instr::_initialize()
 	opcode = type = rs = rt = rd = shamt = func = imme = target = byte_code = 
 		address = data_length = 0;
 	has_label = is_label = is_origin = is_data = is_align = 
-		is_instr = false;
+		is_instr = is_end = false;
 	label = asm_code = operation = comment = section = "";
 }
 
@@ -289,6 +289,7 @@ void Instr::decode(string asm_code)
 		return;
 	}
 	section =  cursect;
+	this->asm_code = asm_code;
 	if ( asm_code[0] == '.' )
 	{
 		if ((ind = asm_code.find(".origin")) != string::npos)
@@ -297,6 +298,15 @@ void Instr::decode(string asm_code)
 			strstream << asm_code.substr(ind + 7) << endl;
 			strstream >> address;
 			strstream.clear();
+			return;
+		}
+		if ((ind = asm_code.find(".end")) != string::npos)
+		{
+			is_end = true;
+			string tmp = trim(asm_code.substr(ind + 4));
+			assert(islegallabel(tmp));
+			label = tmp;
+			has_label = true;
 			return;
 		}
 		if ((ind = asm_code.find(".align")) != string::npos)
@@ -347,48 +357,8 @@ void Instr::decode(string asm_code)
 		label = trim(asm_code.substr(0, ind));
 		string tmp = trim(asm_code.substr(ind + 6));
 		data_table = split(tmp);
-		data_type = ".2byte";
+		data_type = ".8byte";
 		data_length = 8;
-		is_data = true;
-		is_label = true;
-	}
-	else if ((ind = asm_code.find(".half")) != string::npos )
-	{
-		label = trim(asm_code.substr(0, ind));
-		string tmp = trim(asm_code.substr(ind + 5));
-		data_table = split(tmp);
-		data_type = ".half";
-		data_length = 2;
-		is_data = true;
-		is_label = true;
-	}
-	else if ((ind = asm_code.find(".word")) != string::npos )
-	{
-		label = trim(asm_code.substr(0, ind));
-		string tmp = trim(asm_code.substr(ind + 5));
-		data_table = split(tmp);
-		data_type = ".word";
-		data_length = 4;
-		is_data = true;
-		is_label = true;
-	}
-	else if ((ind = asm_code.find(".ascii")) != string::npos )
-	{
-		label = trim(asm_code.substr(0, ind));
-		string tmp = trim(asm_code.substr(ind + 6));
-		data_type = ".ascii";
-		data_table = split(tmp);
-		data_length = 2;
-		is_data = true;
-		is_label = true;
-	}
-	else if ((ind = asm_code.find(".asciiz")) != string::npos )
-	{
-		label = trim(asm_code.substr(0, ind));
-		string tmp = trim(asm_code.substr(ind + 7));
-		data_table = split(tmp);
-		data_type = ".asciiz";
-		data_length = 2;
 		is_data = true;
 		is_label = true;
 	}
@@ -424,7 +394,6 @@ void Instr::decode(string asm_code)
 		return ;
 	}
 
-	this->asm_code = asm_code;
 	if ( (ind = asm_code.find(":")) != string::npos )
 	{
 		is_label = true;
@@ -583,7 +552,6 @@ void Instr::sort(List<Instr> &list)
 	sections.push_back("__empty");
 	for (lit = list.begin(); lit != list.end() ; )
 	{
-		cout << lit->elem.section << endl;
 		for (int i = 0; i != sections.size(); ++i)
 		{
 			if (sections[i] == lit->elem.section)
@@ -602,11 +570,30 @@ void Instr::sort(List<Instr> &list)
 
 void Instr::resolveAddr(List<Instr> & list)
 {
+	bool isinend = false;
+	string endlabel = "";
 	List<Instr>::iterator it = list.begin();
 	unsigned int curAddr = 0;
-	for ( ; it != list.end(); it = it->next)
+	while (it != list.end())
 	{
 		Instr &instr = it->elem;
+		if (isinend)
+		{
+			if (instr.is_label && endlabel == instr.label)
+				isinend = false;
+			else
+			{
+				list.erase(it);
+				continue;
+			}
+		}
+		if (instr.is_end)
+		{
+			endlabel = instr.label;
+			isinend = true;
+			list.erase(it);
+			continue;
+		}
 		if (instr.is_data)
 			instr.address = curAddr;
 		else if (instr.is_instr || instr.is_label)
@@ -621,6 +608,7 @@ void Instr::resolveAddr(List<Instr> & list)
 				+ ((curAddr % instr.data_length)? instr.data_length: 0);
 		else if (instr.is_instr)
 			curAddr += 4;
+		it = it->next;
 	}
 }
 

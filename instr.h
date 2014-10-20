@@ -63,6 +63,7 @@ private:
 	int imme;
 	int target;
 	bool has_label;
+	bool is_end;
 	bool is_align;
 	bool is_instr;
 	bool is_label;

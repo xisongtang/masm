@@ -8,11 +8,26 @@ using namespace std;
 
 #define MAXLEN 0xff
 
-string replace(string source, string e, string c)
+string replace(string source, string e, string c, bool whole)
 {
 	int index = 0;
+	regex re("[0-9a-zA-Z_]");
+	string prefix, suffix;
 	while ( (index = source.find(e, index)) != string::npos)
 	{
+		if (index > 0)
+			prefix = source.substr(index - 1, 1);
+		else
+			prefix = "";
+		if ( index + e.size() < source.size())
+			suffix = source.substr(index + e.size(), 1);
+		else 
+			suffix = "";
+		if (whole && (regex_match(prefix, re)||regex_match(suffix, re)))
+		{
+			index = index + c.size();
+			continue;
+		}
 		source.replace(index, e.size(), c);
 		index = index + c.size();
 	}
@@ -66,7 +81,10 @@ bool isnumber(const string &number)
 
 bool islegallabel(const string &label)
 {
-	return !isdigit(label[0]) && label[0] != '-';
+	if (isdigit(label[0]))
+		return false;
+	regex re("[0-9a-zA-Z_]*");
+	return regex_match(label, re);
 }
 
 string tolower(string str)
