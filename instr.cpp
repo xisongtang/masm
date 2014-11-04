@@ -322,8 +322,9 @@ void Instr::decode(string asm_code)
 			while (align)
 			{
 				--align;
-				data_length <<= 2;
+				data_length <<= 1;
 			}
+			return;
 		}
 		string sec = asm_code.substr(1);
 		if (find(sections.cbegin(), sections.cend(), sec) == sections.cend())
@@ -534,10 +535,10 @@ unsigned int Instr::getByteCode()
 	case 'i':
 		byte_code |= (rs & 31) << 21;
 		byte_code |= (rt & 31) << 16;
-		byte_code |= (imme & ((2 << 16) - 1));
+		byte_code |= (imme & ((1 << 16) - 1));
 		break;
 	case 'j':
-		byte_code |= (target & ((2 << 26) - 1));
+		byte_code |= (target & ((1 << 26) - 1));
 		break;
 	default:
 		break;
@@ -731,7 +732,7 @@ void Instr::outputInstrs(List<Instr> &list, ofstream & fout)
 				it != instr.data_table.end(); ++it)
 			{
 				string tmp = *it;
-				int t;
+				long long t;
 				if (isnumber(tmp))
 				{
 					stringstream strstream;

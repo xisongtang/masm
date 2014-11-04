@@ -168,7 +168,11 @@ string decodesuffix(string str)
 		for (int i = 0; i != rep.size(); ++i)
 		{
 			string tmp;
-			strstream << (int)rep[i];
+			unsigned int cur = (unsigned int)(rep[i] & ((1 << 8) - 1));
+			/* dealing with chinese characters */
+			if (cur > 127)
+				cur = (cur << 8) | (unsigned int)(rep[++i] & ((1 << 8) - 1));
+			strstream << cur;
 			strstream >> tmp;
 			des += tmp;
 			strstream.clear();

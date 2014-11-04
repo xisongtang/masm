@@ -96,6 +96,10 @@ Prehandle::Prehandle()
 	pseudo_map["push"] = new PseudoRule("rs", "sw:rs,imme($29);");
 	pseudo_map["pop"] = new PseudoRule("rs", "lw:rs,imme($29);");
 	pseudo_map["lui"] = new PseudoRule("rd,imme", "addi:$1,$0,imme;sll:rd,$1,16");
+	pseudo_map["beqi"] = new PseudoRule("rs,imme,imme1", "ori:$1,$0,imme;beq:rs,$1,imme1");
+	pseudo_map["bnei"] = new PseudoRule("rs,imme,imme1", "ori:$1,$0,imme;bne:rs,$1,imme1");
+	pseudo_map["muli"] = new PseudoRule("rs,imme", "ori:$1,$0,imme;mul:rs,$1");
+	pseudo_map["divi"] = new PseudoRule("rs,imme", "ori:$1,$0,imme;div:rs,$1");
 
 	format_map["addi"] = "rt,rs,imme";
 	format_map["addiu"] = "rt,rs,imme";
@@ -127,7 +131,7 @@ Prehandle::Prehandle()
 	format_map["mflo"] = "rd";
 	format_map["mthi"] = "rs";
 	format_map["mtlo"] = "rs";
-	format_map["mult"] = "rs,rt";
+	format_map["mul"] = "rs,rt";
 	format_map["or"] = "rd,rs,rt";
 	format_map["sll"] = "rd,rs,shamt";
 	format_map["sllv"] = "rd,rt,rs";
@@ -159,6 +163,7 @@ Prehandle::Prehandle()
 	format_map["syscall"] = " ";
 	format_map["push"] = "rs";
 	format_map["pop"] = "rs";
+	format_map["lui"] = "rd,imme";
 
 	isincomment = isafterdata = hasdata = false;
 	const_map["lb"] = "lh";
@@ -333,9 +338,16 @@ string Prehandle::decode(string str) throw(...)
 	}
 
 	//resolve the .origin expression
-	if ((index = str.find(".origin")) != string::npos)
+	if ((index = str.find(".align"))  != string::npos)
 	{
-		string num = trim(str.substr(8));
+		string num = trim(str.substr(6));
+		if (index > 0)
+			throw Exception("Invalid use of '.origin'", org_str);
+		if (num.size() == 0)
+			str += " 2";
+	}else if ((index = str.find(".origin")) != string::npos)
+	{
+		string num = trim(str.substr(7));
 		if (index > 0)
 			throw Exception("Invalid use of '.origin'", org_str);
 		if (num.size() == 0)
@@ -450,6 +462,21 @@ string Prehandle::decode(string str) throw(...)
 					throw Exception(Exception::is, org_str);
 			}
 			else if (ftmp == "imme")
+			{
+				if (Calculator::isequation(otmp))
+				{
+					string tmp;
+					Calculator calc(otmp);
+					strstream << calc.exec();
+					strstream >> tmp;
+					str = replace(str, otmp, tmp);
+				}
+				else if (islegallabel(otmp))
+					;
+				else if (!isnumber(otmp))
+					throw Exception(Exception::ii, org_str);
+			}
+			else if (ftmp == "imme1")
 			{
 				if (Calculator::isequation(otmp))
 				{

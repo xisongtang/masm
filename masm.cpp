@@ -53,6 +53,11 @@ int main(int argc, char *args[])
 	unsigned lablenumber = 0;
 	stringstream strstream;
 	ifstream fin(finname);
+	if (!fin.is_open())
+	{
+		cerr << "file '" << finname << "' not found." << endl;
+		return 0;
+	}
 	ofstream ftout;
 	if (tmpoutput)
 		ftout.open(ftoutname);
