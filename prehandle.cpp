@@ -221,8 +221,14 @@ string Prehandle::decode(string str) throw(...)
 		if (sm.empty())
 			break;
 		if (sm[1].length() > 1)
-			throw Exception("Invalid character format: it should be only one character", org_str);
-		strstream << (int)(sm[1].str()[0]);
+		{
+			if (sm[1].str()[0] < 0 && sm[1].length() == 2)
+				strstream << (int)(sm[1].str()[0] & 0xff) << (int)(sm[1].str()[1] & 0xff);
+			else
+				throw Exception("Invalid character format: it should be only one character", org_str);
+		}
+		else
+			strstream << (int)(sm[1].str()[0]);
 		string ascii;
 		strstream >> ascii;
 		str = sm.prefix().str() + ascii + sm.suffix().str();
