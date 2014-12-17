@@ -36,10 +36,10 @@ Address:
 Misc:
 	SECTION_FAT	equ		2
 	SECTION_DIR	equ		1
-	SIZE_SYSTEM	equ		10
+	SIZE_SYSTEM	equ		20
 	SIZE_FAT	equ		256
-	SIZE_DIR	equ		1
-	
+	SIZE_DIR	equ		2
+
 Special_Registers:
 	//$k0 = cursor
 	//$k1 = file position
@@ -76,34 +76,34 @@ Boot:
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'系'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'统'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'加'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'载'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'中'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	33
 	Boot_loadsystem:
 		//**************************
 	Boot_2:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'完'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'成'
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
 		addi	$k0,	$k0,	1
@@ -256,23 +256,23 @@ FILEopen:									//Input_string = $a0
 			addi	$t0,	$t0,	16
 			j	FILEopen_find
 	FILEopen_error:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'打'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'开'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'Ч'
+		addi	$a0,	$a0,	'效'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'ì'
+		addi	$a0,	$a0,	'，'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'此'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'τ'
+		addi	$a0,	$a0,	'文'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'件'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
@@ -328,7 +328,7 @@ FILEwrite:									//Input_halfword = $a0
 			addi	$t0,	$t0,	1
 			lh	$t1,	ADDR_FAT($t0)
 			bnez	$t1,	-3
-			beqi	$t0,	SIZE_FAT,	FILEwrite_end
+			beqi $t0,SIZE_FAT,FILEwrite_end
 			//update FAT
 			sh	$t0,	ADDR_FAT($fp)
 			add	$fp,	$t0,	$zero
@@ -484,23 +484,23 @@ FILEdel:									//Input_string = $a0
 			addi	$t0,	$t0,	16
 			j	FILEdel_find
 	FILEdel_error:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'删'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'除'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'Ч'
+		addi	$a0,	$a0,	'效'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'ì'
+		addi	$a0,	$a0,	'，'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'此'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'τ'
+		addi	$a0,	$a0,	'文'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'件'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
@@ -521,13 +521,13 @@ FILEdel:									//Input_string = $a0
 		addi	$t1,	$t1,	1
 		j	FILEdel_updateDIR
 	FILEdel_end:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'删'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'除'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'成'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'功'
 		jal	PRINTchar
 	FILEdel_writeback:
 		//update FAT section
@@ -584,25 +584,25 @@ FILErename:									//Input_string = $a0, Input_string = $a1
 			addi	$t0,	$t0,	16
 			j	FILErename_find
 	FILErename_error:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'重'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'命'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'名'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'Ч'
+		addi	$a0,	$a0,	'效'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'ì'
+		addi	$a0,	$a0,	'，'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'此'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'τ'
+		addi	$a0,	$a0,	'文'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'件'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
@@ -618,15 +618,15 @@ FILErename:									//Input_string = $a0, Input_string = $a1
 		lh	$t3,	3($t9)
 		sh	$t3,	3($t1)
 	FILErename_end:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'重'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'命'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'名'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'成'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'功'
 		jal	PRINTchar
 	FILErename_writeback:
 		//update DIR section
@@ -663,65 +663,65 @@ FILEcopy:									//Input_string = $a0
 			addi	$t0,	$t0,	16
 			j	FILEcopy_find
 	FILEcopy_error:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'复'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'制'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'Ч'
+		addi	$a0,	$a0,	'效'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'ì'
+		addi	$a0,	$a0,	'，'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'此'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'τ'
+		addi	$a0,	$a0,	'文'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'件'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
 	FILEcopy_error2:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'复'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'制'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'错'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'误'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'ì'
+		addi	$a0,	$a0,	'，'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'空'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'间'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'不'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'足'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
 	FILEcopy_error3:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'复'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'制'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'错'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'误'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'ì'
+		addi	$a0,	$a0,	'，'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'目'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'录'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'不'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'足'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
@@ -762,13 +762,13 @@ FILEcopy:									//Input_string = $a0
 			sh	$t4,	ADDR_FAT($t5)
 			j	FILEcopy_element
 	FILEcopy_end:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'复'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'制'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'成'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'功'
 		jal	PRINTchar
 	FILEcopy_writeback:
 		//update FAT section
@@ -792,7 +792,7 @@ FILEcopy:									//Input_string = $a0
 			//add an element
 			add	$t0,	$zero,	$zero
 			addi	$t0,	$t0,	16
-			beqi	$t0,	SIZE_DIR,	FILEcopy_error3
+			beqi	$t0,	SIZE_DIR,	FFILEcopy_error3
 			lh	$t1,	ADDR_DIR($t0)
 			bnez	$t1,	-4
 			addi	$t2,	$t7,	ADDR_DIR
@@ -861,23 +861,23 @@ FILEtype:									//Input_string = $a0
 			addi	$t0,	$t0,	16
 			j	FILEtype_find
 	FILEtype_error:
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'无'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'此'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'τ'
+		addi	$a0,	$a0,	'文'
 		jal	PRINTchar
-		addi	$a0,	$a0,	'?'
+		addi	$a0,	$a0,	'件'
 		jal	PRINTchar
 		pop	$ra
 		jr	$ra
 	FILEtype_success:
 		FILEtype_name:
-			addi	$a0,	$a0,	'τ'
+			addi	$a0,	$a0,	'文'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'件'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'名'
 			jal	PRINTchar
 			addi	$a0,	$a0,	' '
 			jal	PRINTchar
@@ -893,11 +893,11 @@ FILEtype:									//Input_string = $a0
 		jal	LINEFEED
 		pop	$t0
 		FILEtype_ext:
-			addi	$a0,	$a0,	')'
+			addi	$a0,	$a0,	'扩'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'展'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'名'
 			jal	PRINTchar
 			addi	$a0,	$a0,	' '
 			jal	PRINTchar
@@ -915,9 +915,9 @@ FILEtype:									//Input_string = $a0
 		jal	LINEFEED
 		pop	$t0
 		FILEtype_time:
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'时'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'间'
 			jal	PRINTchar
 			addi	$a0,	$a0,	' '
 			jal	PRINTchar
@@ -945,9 +945,9 @@ FILEtype:									//Input_string = $a0
 		jal	LINEFEED
 		pop	$t0
 		FILEtype_date:
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'日'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'ǚ'
+			addi	$a0,	$a0,	'期'
 			jal	PRINTchar
 			addi	$a0,	$a0,	' '
 			jal	PRINTchar
@@ -976,11 +976,11 @@ FILEtype:									//Input_string = $a0
 		jal	LINEFEED
 		pop	$t0
 		FILEtype_length:
-			addi	$a0,	$a0,	'τ'
+			addi	$a0,	$a0,	'文'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'件'
 			jal	PRINTchar
-			addi	$a0,	$a0,	'?'
+			addi	$a0,	$a0,	'长'
 			jal	PRINTchar
 			addi	$a0,	$a0,	' '
 			jal	PRINTchar
@@ -1009,19 +1009,19 @@ Initialize:
 Initialize_load:
 	jal	LINEFEED
 	addi	$a1,	$zero,	255
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'磁'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'盘'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'х'
+	addi	$a0,	$zero,	'信'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'息'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'读'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'取'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'中'
 	jal	PRINTchar
 	Initialize_FAT_read:
 		add	$t0,	$zero,	$zero
@@ -1048,13 +1048,13 @@ Initialize_load:
 		addi	$t0,	$t0,	1
 		addi	$t1,	$t1,	1
 		bnei	$t0,	256,	-5
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'读'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'取'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'完'
 	jal	PRINTchar
-	addi	$a0,	$zero,	'?'
+	addi	$a0,	$zero,	'成'
 	jal	PRINTchar
 	jal	LINEFEED
 	jal	ROLLSCREEN
