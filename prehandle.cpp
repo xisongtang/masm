@@ -99,8 +99,12 @@ Prehandle::Prehandle()
 	pseudo_map["beqi"] = new PseudoRule("rs,imme,imme1", "ori:$1,$0,imme;beq:rs,$1,imme1");
 	pseudo_map["bnei"] = new PseudoRule("rs,imme,imme1", "ori:$1,$0,imme;bne:rs,$1,imme1");
 	pseudo_map["muli"] = new PseudoRule("rs,imme", "ori:$1,$0,imme;mul:rs,$1");
-	pseudo_map["divi"] = new PseudoRule("rs,imme", "ori:$1,$0,imme;div:rs,$1");
+	pseudo_map["divi"] = new PseudoRule("imme", "ori:$1,$0,imme;div:$1");
 
+	format_map["beqi"] = "rs,imme,imme1";
+	format_map["bnei"] = "rs,imme,imme1";
+	format_map["muli"] = "rs,imme";
+	format_map["divi"] = "imme";
 	format_map["addi"] = "rt,rs,imme";
 	format_map["addiu"] = "rt,rs,imme";
 	format_map["andi"] = "rt,rs,imme";
@@ -124,7 +128,7 @@ Prehandle::Prehandle()
 	format_map["add"] = "rd,rs,rt";
 	format_map["addu"] = "rd,rs,rt";
 	format_map["and"] = "rd,rs,rt";
-	format_map["div"] = "rs,rt";
+	format_map["div"] = "rt";
 	format_map["jalr"] = "rs,rd";
 	format_map["jr"] = "rs";
 	format_map["mfhi"] = "rd";
@@ -176,6 +180,18 @@ string Prehandle::decode(string str) throw(...)
 	string org_str = str;
 	string label = "";
 	int index;
+	//deal with c-style one line comment
+	str = trim(str);
+	str = replace(str, "//", "#");
+	index = str.find('#');
+	string cmt_str;
+	//divide the comment from the instruction
+	if (index != string::npos)
+	{
+		cmt_str = trim(str.substr(index));
+		str = trim(str.substr(0, index));
+	}
+
 	//deal with muliline comment
 	if (isincomment)
 	{
@@ -192,25 +208,7 @@ string Prehandle::decode(string str) throw(...)
 		isincomment = true;
 		str = str.substr(0, index);
 	}
-	//deal with c-style one line comment
-	str = replace(str, "//", "#");
-	index = str.find('#');
-	string cmt_str;
-	//divide the comment from the instruction
-	if (index != string::npos)
-	{
-		cmt_str = trim(str.substr(index));
-		str = trim(str.substr(0, index));
-	}
-	//resolve the label expression
-	if ((index = str.find(":")) != string::npos)
-	{
-		label = str.substr(0, index + 1) + "\n";
-		str = str.substr(index + 1);
-	}
-	str = trim(str);
-	str = replace(str, "\t", " ");
-
+	
 	//change the char to ascii number
 	while (true)
 	{
@@ -233,6 +231,15 @@ string Prehandle::decode(string str) throw(...)
 		strstream >> ascii;
 		str = sm.prefix().str() + ascii + sm.suffix().str();
 	}
+	//resolve the label expression
+	if ((index = str.find(":")) != string::npos)
+	{
+		label = str.substr(0, index + 1) + "\n";
+		str = str.substr(index + 1);
+	}
+	str = trim(str);
+	str = replace(str, "\t", " ");
+
 	//take the equ expression's information
 	index = find(str, "equ");
 	if (index != string::npos)
@@ -425,6 +432,7 @@ string Prehandle::decode(string str) throw(...)
 			regexstr = replace(regexstr, "rs", "(.*?)");
 			regexstr = replace(regexstr, "rt", "(.*?)");
 			regexstr = replace(regexstr, "rd", "(.*?)");
+			regexstr = replace(regexstr, "imme1", "(.*?)");
 			regexstr = replace(regexstr, "imme", "(.*?)");
 			regexstr = replace(regexstr, "target", "(.*?)");
 			regexstr = replace(regexstr, "shamt", "(.*?)");

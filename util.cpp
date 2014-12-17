@@ -63,7 +63,7 @@ bool isnumber(const string &number)
 	bool result;
 	if (scale == 16)
 	{
-		regex re("[0-9A-Ba-b]+");
+		regex re("[0-9A-Fa-f]+");
 		result = regex_match(_number, re);
 	}
 	else if (scale == 10)
