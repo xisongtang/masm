@@ -64,12 +64,13 @@ void Instr::initialize_map()
 	asm_map["xori"] = disasm_map[0x0E] = new rule("xori", 0x0E,0, "rt,rs,imme", 'i');
 
 	asm_map["j"] = disasm_map[0x02] = new rule("j", 0x02,0, "target", 'j');
+	asm_map["int"] = disasm_map[0x3F] = new rule("j", 0x3F, 0, "target", 'j');
 	asm_map["jal"] = disasm_map[0x03] = new rule("jal", 0x03,0, "target", 'j');
 
 	asm_map["add"] = disfuncasm_map[0x20] = new rule("add", 0,0x20, "rd,rs,rt", 'r');
 	asm_map["addu"] = disfuncasm_map[0x21] = new rule("addu", 0,0x21, "rd,rs,rt", 'r');
 	asm_map["and"] = disfuncasm_map[0x24] = new rule("and", 0,0x24, "rd,rs,rt", 'r');
-	asm_map["div"] = disfuncasm_map[0x0D] = new rule("div", 0,0x0D, "rs,rt", 'r');
+	asm_map["div"] = disfuncasm_map[0x0D] = new rule("div", 0,0x0D, "rs", 'r');
 	asm_map["jalr"] = disfuncasm_map[0x09] = new rule("jalr", 0,0x09, "rs,rd", 'r');
 	asm_map["jr"] = disfuncasm_map[0x08] = new rule("jr", 0,0x08, "rs", 'r');
 	asm_map["mfhi"] = disfuncasm_map[0x10] = new rule("mfhi", 0,0x10, "rd", 'r');

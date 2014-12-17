@@ -1,0 +1,1269 @@
+/////////////////////////////////////////////////////////////////////////////
+//			PARAMETERS
+/////////////////////////////////////////////////////////////////////////////
+
+Parameters:
+	CHAR_SPACE	equ		32
+	CHAR_ENTER	equ		13
+	CHAR_BS	equ		8
+	CHAR_ZERO	equ		48
+	CHAR_F1	equ		128
+	CHAR_F2	equ		129
+	CHAR_F3	equ		130
+	CHAR_F4	equ		131
+	CHAR_F5	equ		132
+	CHAR_F6	equ		133
+	CHAR_F7	equ		134
+	CHAR_F8	equ		135
+	CHAR_F9	equ		136
+	CHAR_F10	equ		137
+	CHAR_F11	equ		138
+	CHAR_F12	equ		139
+	CHAR_ESC	equ		27
+
+Address:
+	ADDR_SYSTEM	equ		1024
+	ADDR_SYSEND	equ		4095
+	ADDR_PROGRAM	equ		4096
+	ADDR_PROGEND	equ		29695
+	ADDR_FAT	equ		29696	//25k ~ 45k-1
+	ADDR_DIR	equ		46080	//45k ~ 46k-1
+	ADDR_FILE	equ		47104	//46k ~ 50k-1
+	ADDR_VRAM1	equ		51200	//50k ~ 52k-1
+	ADDR_VRAM2	equ		53248	//52k ~ 54k-1
+	ADDR_KEYBD	equ		55296	//54k ~ 55k-1
+
+Misc:
+	SECTION_FAT	equ		2
+	SECTION_DIR	equ		1
+	SIZE_SYSTEM	equ		10
+	SIZE_FAT	equ		256
+	SIZE_DIR	equ		1
+	
+Special_Registers:
+	//$k0 = cursor
+	//$k1 = file position
+	//$gp = system stack pointer
+	//$fp = file pointer
+	//$sp = stack pointer
+
+/////////////////////////////////////////////////////////////////////////////
+//			BOOT
+/////////////////////////////////////////////////////////////////////////////
+
+Boot:
+	Boot_1:
+		add	$gp,	$zero,	$zero
+		add	$fp,	$zero,	$zero
+		addi	$sp,	$zero,	0
+		addi	$k0,	$zero,	0
+		addi	$k1,	$zero,	0
+		addi	$a0,	$zero,	0
+		addi	$a1,	$zero,	0
+		addi	$a2,	$zero,	0
+		addi	$a3,	$zero,	0
+		addi	$v0,	$zero,	0
+		addi	$v1,	$zero,	0
+		addi	$a0,	$a0,	'Z'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'P'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'C'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	33
+	Boot_loadsystem:
+		//**************************
+	Boot_2:
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+		addi	$a0,	$a0,	'?'
+		sh	$a0,	ADDR_VRAM1($k0)
+		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	1
+	j 	Initialize
+
+/////////////////////////////////////////////////////////////////////////////
+//			SYSTEM CALLS
+/////////////////////////////////////////////////////////////////////////////
+
+Syscall:  
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	PRINTint
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	PRINTstring 
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	READint 
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	READstring  
+	addi	$v0,	$v0,	-1       
+	beqz	$v0,	PRINTchar 
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	READchar
+	addi	$v0,	$v0,	-1
+	beqz	$v0,	FILEopen  
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	FILEread 
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	FILEwrite  
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	FILEclose  
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	SysBreak 
+	addi	$v0,	$v0,	-1    
+	beqz	$v0,	SysExit
+	jr	$ra  
+
+PRINTint:									//Input_int = $a0, Input_colour = $a1
+	mthi	$zero
+	mtlo	$a0
+	add	$t0,	$sp,	$zero
+	Bitwise_div:
+		divi	10
+		mfhi	$t1
+		push	$t1
+		mthi	$zero
+		mflo	$t1
+		bnez	$t1,	Bitwise_div
+	Bitwise_printint:
+		pop	$t1
+		addi	$a0,	$t1,	CHAR_ZERO
+		push	$ra
+		jal	PRINTchar
+		pop	$ra
+		bne	$sp,	$t0,	Bitwise_printint
+		jr	$ra
+PRINTstring:									//Input_string = $a0, Input_colour = $a1
+	add	$t0,	$zero,	$a0
+	Bitwise_printstring:
+		lh	$t0,	0($a0)
+		addi	$t0,	$t0,	1
+		beqz	$t0,	PRINTstring_end
+		push	$ra
+		jal	PRINTchar
+		pop	$ra
+		j	Bitwise_printstring
+	PRINTstring_end:
+		jr	$ra
+READint:									//
+	add	$t1,	$k0,	$zero
+	add	$v0,	$zero,	$zero
+	Bitwise_readint:
+		push	$ra
+		jal	READchar
+		pop	$ra
+		addi	$t2,	$v0,	0
+		beqi	$t2,	CHAR_ENTER,	READint_cal
+		bnei	$t2,	CHAR_BS,    	READint_normal
+		bne	$k0,	$t1,		READint_emptybs
+		addi	$a0,	$zero,		CHAR_SPACE
+		push	$ra
+		jal	PRINTchar
+		pop	$ra
+		addi	$k0,	$k0, -2 		//Cursor-2
+		j	Bitwise_readint 		//Bs continue
+		READint_normal:
+			addi	$a0,	$t2,	CHAR_ZERO
+			push	$ra
+			jal	PRINTchar
+			pop	$ra
+		READint_emptybs:
+			j	Bitwise_readint
+	READint_cal:					//$t1 = beginning, $k0 = ending
+		addi	$t2,	$t1,	1
+		beq	$t2,	$k0,	READint_end
+		muli	$v0,	10
+		mflo	$v0
+		lh	$t2,	ADDR_VRAM1($t1)
+		addi	$t2,	$t2,	-CHAR_ZERO
+		add	$v0,	$v0,	$t2
+		addi	$t1,	$t1,	1
+		j	READint_cal
+	READint_end:
+		jr	$ra
+READstring:									//Input_sp = $a0
+	add	$t1,	$a0,	$zero
+	Bitwise_readstring:
+		push	$ra
+		jal	READchar
+		pop	$ra
+		sw	$v0,	0($t1)
+		addi	$t1,	$t1,	1
+		bnei	$v0,	CHAR_ENTER,	Bitwise_readstring
+	READstring_end:
+		addi	$t0,	$zero,	0
+		sw	$t0,	-1($t1)
+		add	$v0,	$a0,	$zero
+		jr	$ra
+PRINTchar:									//Input_char = $a0, Input_colour = $a1
+	sh	$a0,	ADDR_VRAM1($k0)
+	sh	$a1,	ADDR_VRAM2($k0)
+	addi	$k0,	$k0,	1
+	jr	$ra
+READchar:									//
+	add	$t0,	$zero,	$zero
+	READchar_wait:
+		int	2
+		sh	$v0,	ADDR_KEYBD($t0)
+	READchar_end:
+		jr	$ra
+FILEopen:									//Input_string = $a0
+	push	$ra
+	addi	$t0,	$zero,	ADDR_DIR
+	add 	$t1,	$zero,	$a0
+	FILEopen_find:
+		addi	$t2,	$t0,	0		//current file name
+		addi	$t3,	$zero,	0		//current string name
+		lh	$t4,	0($t2)
+		beqz	$t2,	FILEopen_error		//error if no more files
+		FILEopen_element:
+			lh	$t4,	0($t2)
+			lh	$t5,	0($t3)
+			bne 	$t4,	$t5,	FILEopen_continue
+			beqz	$t4,	FILEopen_success
+			addi	$t2,	$t2,	1
+			addi	$t3,	$t3,	1
+			sub	$t6,	$t2,	$t0
+			beqi	$t6,	4,	FILEopen_continue
+			j	FILEopen_element
+		FILEopen_continue:
+			addi	$t0,	$t0,	16
+			j	FILEopen_find
+	FILEopen_error:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'完'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'足'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'而'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILEopen_success:
+		lh	$fp,	13($t0)		//Starting section
+		add	$a0,	$fp,	$zero
+		int	0
+		add	$k1,	$zero,	$zero
+		pop	$ra
+		jr	$ra
+FILEread:									//
+	lh	$v0,	ADDR_FILE($k1)
+	addi	$k1,	$k1,	1
+	beqi	$k1,	256,	FILEread_nextsection
+	j	FILEread_end
+	FILEread_nextsection:
+		addi	$k1,	$k1,	-1
+		//check if ending section
+		lh	$t0,	ADDR_FAT($fp)
+		addi	$t0,	$t0,	-0xFFF7
+		bgtz	$t1,	FILEread_end
+		//read next section
+		add	$a0,	$fp,	$zero
+		int	1
+		lh	$fp,	ADDR_FAT($fp)
+		add	$a0,	$fp,	$zero
+		int	0
+		add	$k1,	$zero,	$zero
+	FILEread_end:
+		jr	$ra
+FILEwrite:									//Input_halfword = $a0
+	sh	$a0,	ADDR_FILE($k1)
+	addi	$k1,	$k1,	1
+	beqi	$k1,	512,	FILEwrite_nextsection
+	j	FILEwrite_end
+	FILEwrite_nextsection:
+		addi	$k1,	$k1,	-1
+		//check if ending section
+		lh	$t0,	ADDR_FAT($fp)
+		addi	$t0,	$t0,	-0xFFF7
+		bgtz	$t1,	FILEwrite_extend
+		add	$a0,	$fp,	$zero
+		int	1
+		//read next section
+		lh	$fp,	ADDR_FAT($fp)
+		add	$a0,	$fp,	$zero
+		int	0
+		add	$k1,	$zero,	$zero
+		j	FILEwrite_end
+		FILEwrite_extend:
+			//find a new section
+			add	$t0,	$fp,	$zero
+			addi	$t0,	$t0,	1
+			lh	$t1,	ADDR_FAT($t0)
+			bnez	$t1,	-3
+			beqi	$t0,	SIZE_FAT,	FILEwrite_end
+			//update FAT
+			sh	$t0,	ADDR_FAT($fp)
+			add	$fp,	$t0,	$zero
+			addi	$t0,	$zero,	0xFFFF
+			sh	$t0,	ADDR_FAT($fp)
+			add	$a0,	$fp,	$zero
+			int	0
+			//update FAT section
+			add	$t0,	$zero,	$zero
+			add	$t1,	$zero,	$zero
+			FILEwrite_update:
+				lh	$t2,	ADDR_FILE($t0)
+				lh	$t3,	ADDR_FAT($t1)
+				sh	$t2,	ADDR_FAT($t1)
+				sh	$t3,	ADDR_FILE($t0)
+				addi	$t0,	$t0,	1
+				addi	$t1,	$t1,	1
+				bnei	$t0,	256,	FILEwrite_update
+			FILEwrite_update2:
+				addi	$a0,	$zero,	SECTION_FAT
+				int	1
+				add	$t0,	$zero,	$zero
+				bnei	$t1,	SIZE_FAT,	FILEwrite_update3
+				j	FILEwrite_update
+			FILEwrite_update3:
+			//redirect
+			add	$k1,	$zero,	$zero
+	FILEwrite_end:
+		jr	$ra
+FILEclose:									//
+	add	$a0,	$fp,	$zero
+	int	1
+	add	$k1,	$zero,	$zero
+	add	$fp,	$zero,	$zero
+	jr	$ra
+SysBreak:									//
+	int	2
+	lh	$v0,	ADDR_KEYBD($zero)
+	bnei	$v0,	CHAR_ESC,	-3
+	jr	$ra
+SysExit:									//
+	add	$a0,	$zero,	$zero
+	add	$a1,	$zero,	$zero
+	add	$k0,	$zero,	$zero
+	jal	PRINTchar
+	bnei	$k0,	1200,	-2
+	beqz	$zero,	-1
+
+/////////////////////////////////////////////////////////////////////////////
+//			SYSTEM
+/////////////////////////////////////////////////////////////////////////////
+
+ROLLSCREEN:
+	push	$ra
+	push	$k0
+	addi	$t1,	$zero,	ADDR_VRAM1
+	addi	$t2,	$zero,	ADDR_VRAM2
+	add	$k0,	$zero,	$zero
+	ROLLSCREEN_begin:
+		lw	$a0,	40($t1)
+		lw	$a1,	40($t2)
+		push	$t1
+		push	$t2
+		jal	PRINTchar
+		pop	$t2
+		pop	$t1
+		addi	$t1,	$t1,	1
+		addi	$t2,	$t2,	1
+		beqi	$k0,	1160,	ROLLSCREEN_end
+		j	ROLLSCREEN_begin
+	ROLLSCREEN_end:
+		pop	$t0
+		addi	$k0,	$t0,	-40
+		pop	$ra
+		jr	$ra
+LINEFEED:
+	mtlo	$k0
+	divi	40
+	mflo	$k0
+	muli	$k0,	40
+	bnei	$k0,	1200,	1
+	j	LINEFEED_end
+	push	$ra
+	jal	ROLLSCREEN
+	pop	$ra
+	LINEFEED_end:
+		jr	$ra
+		
+FILEdir:									//
+	push	$ra
+	jal	LINEFEED
+	add	$t0,	$zero,	$zero
+	FILEdir_element:
+		add	$t0,	$t3,	$zero		//Goto next file
+		lh	$a0,	ADDR_DIR($t0)
+		FILEdir_exist:			//End if Filename = '\0'
+			beqi	$a0,	0,	FILEdir_end
+		FILEdir_hidden:			//Pass if File is hidden
+			addi	$t1,	$t0,	5
+			lh	$t2,	ADDR_DIR($t1)
+			sll	$t2,	$t2,	30
+			srl	$t2,	$t2,	31
+			addi 	$t3,	$t0,	16
+			beqi	$t2,	1,	FILEdir_element
+		FILEdir_normal:
+			lh	$a0,	ADDR_DIR($t0)		//Filename.char1
+			addi	$t0,	$t0,	1
+			jal	PRINTchar
+			lh	$a0,	ADDR_DIR($t0)		//Filename.char2
+			addi	$t0,	$t0,	1
+			jal	PRINTchar
+			lh	$a0,	ADDR_DIR($t0)		//Filename.char3
+			addi	$t0,	$t0,	1
+			jal	PRINTchar
+			lh	$a0,	ADDR_DIR($t0)		//Filename.char4
+			addi	$t0,	$t0,	1
+			jal	PRINTchar
+			addi	$a0,	$zero,	' '		//dot
+			jal	PRINTchar
+			lw	$t1,	ADDR_DIR($t0)		//Extention + Properties
+			srl	$a0,	$t1,	24
+			jal	PRINTchar			//Filename.ext1
+			srl	$a0,	$t1,	16
+			jal	PRINTchar			//Filename.ext2
+			srl	$a0,	$t1,	8
+			jal	PRINTchar			//Filename.ext3
+		jal	LINEFEED
+		j 	FILEdir_element
+	FILEdir_end:
+		jal	LINEFEED
+		pop	$ra
+		jr	$ra
+FILEdel:									//Input_string = $a0
+	push	$ra
+	addi	$t0,	$zero,	ADDR_DIR
+	add	$t1,	$zero,	$a0
+	FILEdel_find:
+		addi	$t2,	$t0,	0		//current file name
+		addi	$t3,	$zero,	0		//current string name
+		lh	$t4,	0($t2)
+		beqz	$t2,	FILEdel_error		//error if no more files
+		FILEdel_element:
+			lh	$t4,	0($t2)
+			lh	$t5,	0($t3)
+			bne 	$t4,	$t5,	FILEdel_continue
+			beqz	$t4,	FILEdel_success
+			addi	$t2,	$t2,	1
+			addi	$t3,	$t3,	1
+			sub	$t6,	$t2,	$t0
+			beqi	$t6,	4,	FILEdel_continue
+			j	FILEdel_element
+		FILEdel_continue:
+			addi	$t0,	$t0,	16
+			j	FILEdel_find
+	FILEdel_error:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'完'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'足'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'而'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILEdel_success:
+		lh	$t1,	13($t0)	//Starting Section
+	FILEdel_updateFAT:
+		lh	$t2,	ADDR_FAT($t1)
+		sh	$zero,	ADDR_FAT($t1)
+		addi	$t3,	$t2,	-0xFFF7
+		bgtz	$t3,	FILEdel_updateDIR
+		add	$t1,	$t2,	$zero
+		j	FILEdel_updateFAT
+	FILEdel_updateDIR:
+		add	$t1,	$t0,	$zero
+		lh	$t3,	16($t1)
+		beqz	$t3,	FILEdel_end
+		sh	$t3,	0($t1)
+		addi	$t1,	$t1,	1
+		j	FILEdel_updateDIR
+	FILEdel_end:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+	FILEdel_writeback:
+		//update FAT section
+		add	$t0,	$zero,	$zero
+		add	$t1,	$zero,	$zero
+		FILEdel_update:
+			lh	$t2,	ADDR_FILE($t0)
+			lh	$t3,	ADDR_FAT($t1)
+			sh	$t2,	ADDR_FAT($t1)
+			sh	$t3,	ADDR_FILE($t0)
+			addi	$t0,	$t0,	1
+			addi	$t1,	$t1,	1
+			bnei	$t0,	256,	FILEdel_update
+		FILEdel_update2:
+			addi	$a0,	$zero,	SECTION_FAT
+			int	1
+			add	$t0,	$zero,	$zero
+			bnei	$t1,	SIZE_FAT,	FILEdel_update3
+			j	FILEdel_update
+		FILEdel_update3:
+		//update DIR section
+		add	$t0,	$zero,	$zero
+		lh	$t2,	ADDR_FILE($t0)
+		lh	$t3,	ADDR_DIR($t0)
+		sh	$t2,	ADDR_DIR($t0)
+		sh	$t3,	ADDR_FILE($t0)
+		addi	$t0,	$t0,	1
+		addi	$t1,	$t1,	1
+		bnei	$t0,	256,	FILEdel_update3
+		pop	$ra
+		jr	$ra
+FILErename:									//Input_string = $a0, Input_string = $a1
+	push	$ra
+	add	$t9,	$a1,	$zero
+	add	$a1,	$zero,	$zero
+	addi	$t0,	$zero,	ADDR_DIR
+	add 	$t1,	$zero,	$a0
+	FILErename_find:
+		addi	$t2,	$t0,	0		//current file name
+		addi	$t3,	$zero,	0		//current string name
+		lh	$t4,	0($t2)
+		beqz	$t2,	FILErename_error		//error if no more files
+		FILErename_element:
+			lh	$t4,	0($t2)
+			lh	$t5,	0($t3)
+			bne 	$t4,	$t5,	FILErename_continue
+			beqz	$t4,	FILErename_success
+			addi	$t2,	$t2,	1
+			addi	$t3,	$t3,	1
+			sub	$t6,	$t2,	$t0
+			beqi	$t6,	4,	FILErename_continue
+			j	FILErename_element
+		FILErename_continue:
+			addi	$t0,	$t0,	16
+			j	FILErename_find
+	FILErename_error:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'完'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'足'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'而'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILErename_success:
+	FILErename_updateDIR:
+		add	$t1,	$t0,	$zero
+		lh	$t3,	0($t9)
+		sh	$t3,	0($t1)
+		lh	$t3,	1($t9)
+		sh	$t3,	1($t1)
+		lh	$t3,	2($t9)
+		sh	$t3,	2($t1)
+		lh	$t3,	3($t9)
+		sh	$t3,	3($t1)
+	FILErename_end:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+	FILErename_writeback:
+		//update DIR section
+		add	$t0,	$zero,	$zero
+		lh	$t2,	ADDR_FILE($t0)
+		lh	$t3,	ADDR_DIR($t0)
+		sh	$t2,	ADDR_DIR($t0)
+		sh	$t3,	ADDR_FILE($t0)
+		addi	$t0,	$t0,	1
+		addi	$t1,	$t1,	1
+		bnei	$t0,	256,	FILErename_writeback
+		pop	$ra
+		jr	$ra
+FILEcopy:									//Input_string = $a0
+	push	$ra
+	addi	$t0,	$zero,	ADDR_DIR
+	add	$t1,	$zero,	$a0
+	FILEcopy_find:
+		addi	$t2,	$t0,	0		//current file name
+		addi	$t3,	$zero,	0		//current string name
+		lh	$t4,	0($t2)
+		beqz	$t2,	FILEcopy_error		//error if no more files
+		FILEcopy_element:
+			lh	$t4,	0($t2)
+			lh	$t5,	0($t3)
+			bne 	$t4,	$t5,	FILEcopy_continue
+			beqz	$t4,	FILEcopy_success
+			addi	$t2,	$t2,	1
+			addi	$t3,	$t3,	1
+			sub	$t6,	$t2,	$t0
+			beqi	$t6,	4,	FILEcopy_continue
+			j	FILEcopy_element
+		FILEcopy_continue:
+			addi	$t0,	$t0,	16
+			j	FILEcopy_find
+	FILEcopy_error:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'完'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'足'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'而'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILEcopy_error2:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'足'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILEcopy_error3:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'足'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILEcopy_success:
+		//Starting Section
+		lh	$t1,	13($t0)
+		//Store the DIR position
+		add	$t7,	$t0,	$zero
+		//Find a new Section
+		add	$t2,	$zero,	$zero
+		beqi	$t2,	SIZE_FAT,	FILEcopy_error2
+		addi	$t2,	$t2,	1
+		lh	$t3,	ADDR_FAT($t2)
+		bnez	$t3,	-4
+		lh	$t2,	13($t3)
+	FILEcopy_extend:	//Starting = $t1,	Ending = $t2
+		add	$t3,	$t1,	$zero	//Original
+		add	$t4,	$t2,	$zero	//Target
+		FILEcopy_element:
+			add	$a0,	$t3,	$zero
+			int	0
+			add	$a0,	$t4,	$zero
+			int	1
+			//find another
+			lh	$t0,	ADDR_FAT($t3)
+			addi	$t0,	$t0,	-0xFFF7
+			bgtz	$t0,	1
+			beqz	$zero,	2
+			addi	$t0,	$t0,	0xFFFF
+			sh	$t0,	ADDR_FAT($t4)
+			bgtz	$t0,	FILEcopy_end
+			add	$t5,	$t4,	$zero
+			addi	$t4,	$t4,	1
+			beqi	$t4,	SIZE_FAT,	FILE_copy_error2
+			lh	$t0,	ADDR_FAT($t4)
+			bnez	$t0,	-4
+			lh	$t3,	ADDR_FAT($t3)
+			sh	$t4,	ADDR_FAT($t5)
+			j	FILEcopy_element
+	FILEcopy_end:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+	FILEcopy_writeback:
+		//update FAT section
+		add	$t0,	$zero,	$zero
+		add	$t1,	$zero,	$zero
+		FILEcopy_update:
+			lh	$t2,	ADDR_FILE($t0)
+			lh	$t3,	ADDR_FAT($t1)
+			sh	$t2,	ADDR_FAT($t1)
+			sh	$t3,	ADDR_FILE($t0)
+			addi	$t0,	$t0,	1
+			addi	$t1,	$t1,	1
+			bnei	$t0,	256,	FILEcopy_update
+		FILEcopy_update2:
+			addi	$a0,	$zero,	SECTION_FAT
+			int	1
+			add	$t0,	$zero,	$zero
+			bnei	$t1,	SIZE_FAT,	FILEcopy_update3
+			j	FILEcopy_update
+		FILEcopy_update3:	//DIR position = $t7
+			//add an element
+			add	$t0,	$zero,	$zero
+			addi	$t0,	$t0,	16
+			beqi	$t0,	SIZE_DIR,	FILEcopy_error3
+			lh	$t1,	ADDR_DIR($t0)
+			bnez	$t1,	-4
+			addi	$t2,	$t7,	ADDR_DIR
+			addi	$t3,	$t0,	ADDR_DIR
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			addi	$t2,	$t2,	2
+			addi	$t3,	$t3,	2
+			lw	$t4,	0($t2)
+			sw	$t4,	0($t3)
+			//update DIR section
+			add	$t0,	$zero,	$zero
+			lh	$t2,	ADDR_FILE($t0)
+			lh	$t3,	ADDR_DIR($t0)
+			sh	$t2,	ADDR_DIR($t0)
+			sh	$t3,	ADDR_FILE($t0)
+			addi	$t0,	$t0,	1
+			addi	$t1,	$t1,	1
+			bnei	$t0,	256,	-8
+		pop	$ra
+		jr	$ra
+FILEtype:									//Input_string = $a0
+	push	$ra
+	addi	$t0,	$zero,	ADDR_DIR
+	add 	$t1,	$zero,	$a0
+	FILEtype_find:
+		addi	$t2,	$t0,	0		//current file name
+		addi	$t3,	$zero,	0		//current string name
+		lh	$t4,	0($t2)
+		beqz	$t2,	FILEtype_error		//error if no more files
+		FILEtype_element:
+			lh	$t4,	0($t2)
+			lh	$t5,	0($t3)
+			bne 	$t4,	$t5,	FILEtype_continue
+			beqz	$t4,	FILEtype_success
+			addi	$t2,	$t2,	1
+			addi	$t3,	$t3,	1
+			sub	$t6,	$t2,	$t0
+			beqi	$t6,	4,	FILEtype_continue
+			j	FILEtype_element
+		FILEtype_continue:
+			addi	$t0,	$t0,	16
+			j	FILEtype_find
+	FILEtype_error:
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'而'
+		jal	PRINTchar
+		addi	$a0,	$a0,	'?'
+		jal	PRINTchar
+		pop	$ra
+		jr	$ra
+	FILEtype_success:
+		FILEtype_name:
+			addi	$a0,	$a0,	'而'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			lh	$a0,	0($t0)
+			jal	PRINTchar
+			lh	$a0,	1($t0)
+			jal	PRINTchar
+			lh	$a0,	2($t0)
+			jal	PRINTchar
+			lh	$a0,	3($t0)
+			jal	PRINTchar
+		push	$t0
+		jal	LINEFEED
+		pop	$t0
+		FILEtype_ext:
+			addi	$a0,	$a0,	')'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			lh	$a0,	4($t0)
+			srl	$a0,	$a0,	8
+			jal	PRINTchar
+			lh	$a0,	4($t0)
+			sll	$a0,	$a0,	24
+			srl	$a0,	$a0,	24
+			jal	PRINTchar
+			lh	$a0,	5($t0)
+			srl	$a0,	$a0,	8
+			jal	PRINTchar
+		push	$t0
+		jal	LINEFEED
+		pop	$t0
+		FILEtype_time:
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			//year
+			lh	$a0,	11($t0)
+			srl	$a0,	$a0,	9
+			addi	$a0,	$a0,	1980
+			jal	PRINTint
+			addi	$a0,	$a0,	'.'
+			jal	PRINTchar
+			//month
+			lh	$a0,	11($t0)
+			srl	$a0,	$a0,	13
+			andi	$a0,	$a0,	15
+			jal	PRINTint
+			addi	$a0,	$a0,	'.'
+			jal	PRINTchar
+			//date
+			lh	$a0,	11($t0)
+			andi	$a0,	$a0,	31
+			jal	PRINTint
+		push	$t0
+		jal	LINEFEED
+		pop	$t0
+		FILEtype_date:
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'邢'
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			//hour
+			lh	$a0,	12($t0)
+			srl	$a0,	$a0,	11
+			andi	$a0,	$a0,	31
+			jal	PRINTint
+			addi	$a0,	$a0,	':'
+			jal	PRINTchar
+			//minute
+			lh	$a0,	12($t0)
+			srl	$a0,	$a0,	5
+			andi	$a0,	$a0,	63
+			jal	PRINTint
+			addi	$a0,	$a0,	':'
+			jal	PRINTchar
+			//second
+			lh	$a0,	12($t0)
+			andi	$a0,	$a0,	31
+			sll	$a0,	$a0,	1
+			jal	PRINTint
+		push	$t0
+		jal	LINEFEED
+		pop	$t0
+		FILEtype_length:
+			addi	$a0,	$a0,	'而'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	'?'
+			jal	PRINTchar
+			addi	$a0,	$a0,	' '
+			jal	PRINTchar
+			lh	$a0,	14($t0)
+			srl	$t0,	$a0,	16
+			lh	$a0,	15($t0)
+			add	$a0,	$a0,	$t0
+			jal	PRINTchar
+		jal	LINEFEED
+	FILEtype_end:
+		pop	$ra
+		jr	$ra
+
+Initialize:
+	add	$gp,	$zero,	$zero
+	addi	$fp,	$zero,	255
+	addi	$sp,	$zero,	ADDR_SYSEND
+	addi	$k0,	$zero,	0
+	addi	$k1,	$zero,	0
+	addi	$a0,	$zero,	0
+	addi	$a1,	$zero,	255
+	addi	$a2,	$zero,	0
+	addi	$a3,	$zero,	0
+	addi	$v0,	$zero,	0
+	addi	$v1,	$zero,	0
+Initialize_load:
+	jal	LINEFEED
+	addi	$a1,	$zero,	255
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'抒'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	Initialize_FAT_read:
+		add	$t0,	$zero,	$zero
+		add	$t1,	$zero,	$zero
+		addi	$a0,	$zero,	SECTION_FAT
+	Initialize_FAT_element:
+		int	0
+		lh	$t2,	ADDR_FILE($t0)
+		sh	$t2,	ADDR_FAT($t1)
+		addi	$t0,	$t0,	1
+		addi	$t1,	$t1,	1
+		bnei	$t0,	256,	-5
+		addi	$a0,	$a0,	1
+		beqi	$t1,	SIZE_FAT,	1
+		j	Initialize_FAT_element
+	Initialize_DIR_read:
+		add	$t0,	$zero,	$zero
+		add	$t1,	$zero,	$zero
+		addi	$a0,	$zero,	SECTION_DIR
+	Initialize_DIR_element:
+		int	0
+		lh	$t2,	ADDR_FILE($t0)
+		sh	$t2,	ADDR_DIR($t1)
+		addi	$t0,	$t0,	1
+		addi	$t1,	$t1,	1
+		bnei	$t0,	256,	-5
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	addi	$a0,	$zero,	'?'
+	jal	PRINTchar
+	jal	LINEFEED
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+	jal	ROLLSCREEN
+
+PHASE_start:
+	add	$a0,	$zero,	$sp
+	jal	READstring
+	add	$s0,	$a0,	$zero
+	jal	ROLLSCREEN
+PHASE_judge:		//Use $s0
+	judge_dir:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'd',	judge_find
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'i',	judge_find
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'r',	judge_find
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_find
+		j	PHASE_dir
+	judge_find:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'f',	judge_copy
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'i',	judge_copy
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'n',	judge_copy
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'd',	judge_copy
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_copy
+		j	PHASE_find
+	judge_copy:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'c',	judge_del
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'o',	judge_del
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'p',	judge_del
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'y',	judge_del
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_del
+		j	PHASE_copy
+	judge_del:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'd',	judge_ren
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'e',	judge_ren
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'l',	judge_ren
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_ren
+		j	PHASE_del
+	judge_ren:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'r',	judge_type
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'e',	judge_type
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'n',	judge_type
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_type
+		j	PHASE_ren
+	judge_type:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	't',	judge_open
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'y',	judge_open
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'p',	judge_open
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'e',	judge_open
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_open
+		j	PHASE_type
+	judge_open:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'o',	judge_exe
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'p',	judge_exe
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'e',	judge_exe
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'n',	judge_exe
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_exe
+		j	PHASE_open
+	judge_exe:
+		add	$t0,	$zero,	$s0
+		lh	$t1,	0($t0)
+		bnei	$t1,	'e',	judge_fail
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'x',	judge_fail
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	'e',	judge_fail
+		addi	$t0,	$t0,	1
+		lh	$t1,	0($t0)
+		bnei	$t1,	' ',	judge_fail
+		bnei	$k1,	0,	judge_fail
+		j	PHASE_exe
+	judge_fail:
+		j	PHASE_end
+PHASE_dir:
+	jal	FILEdir
+	j	PHASE_end
+PHASE_find:
+	addi	$t0,	$t0,	1	//set to the beginning of file name
+	//***************************
+PHASE_exe:
+	//Preserve registers
+	push	$s0
+	push	$s1
+	push	$s2
+	push	$s3
+	push	$s4
+	push	$s5
+	push	$s6
+	push	$s7
+	push	$k0
+	push	$k1
+	add	$gp,	$sp,	$zero
+	//Preserve the screen
+	//Execute the program
+	//Restore the screen
+	//Restore registers
+	add	$gp,	$zero,	$zero
+	pop	$k1
+	pop	$k0
+	pop	$s7
+	pop	$s6
+	pop	$s5
+	pop	$s4
+	pop	$s3
+	pop	$s2
+	pop	$s1
+	pop	$s0
+	add	$a1,	$zero,	$zero
+	j	PHASE_end
+PHASE_copy:
+	addi	$t0,	$t0,	1	//set to the beginning of file name
+	add	$a0,	$t0,	$zero
+	jal	FILEcopy
+	j	PHASE_end
+PHASE_del:
+	addi	$t0,	$t0,	1	//set to the beginning of file name
+	add	$a0,	$t0,	$zero
+	jal	FILEdel
+	j	PHASE_end
+PHASE_ren:
+	addi	$t0,	$t0,	1	//set to the beginning of file name
+	add	$a0,	$t0,	$zero
+	addi	$t0,	$t0,	1
+	lh	$t1,	0($t0)
+	bnei	$t1,	32,	-3
+	addi	$a1,	$t0,	1	//set to the beginning of file name
+	jal	FILErename
+	j	PHASE_end
+PHASE_type:
+	addi	$t0,	$t0,	1	//set to the beginning of file name
+	add	$a0,	$t0,	$zero
+	jal	FILEtype
+	j	PHASE_end
+PHASE_open:
+	addi	$t0,	$t0,	1	//set to the beginning of file name
+	add	$a0,	$t0,	$zero
+	addi	$v0,	$zero,	6
+	jal	Syscall
+	j	PHASE_end
+PHASE_end:

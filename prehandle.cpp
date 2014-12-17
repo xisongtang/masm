@@ -124,6 +124,7 @@ Prehandle::Prehandle()
 	format_map["sw"] = "rt,imme(rs)";
 	format_map["xori"] = "rt,rs,imme";
 	format_map["j"] = "target";
+	format_map["int"] = "target";
 	format_map["jal"] = "target";
 	format_map["add"] = "rd,rs,rt";
 	format_map["addu"] = "rd,rs,rt";
@@ -475,7 +476,7 @@ string Prehandle::decode(string str) throw(...)
 				else if (!isnumber(otmp))
 					throw Exception(Exception::is, org_str);
 			}
-			else if (ftmp == "imme")
+			else if (ftmp == "imme1")
 			{
 				if (Calculator::isequation(otmp))
 				{
@@ -490,7 +491,7 @@ string Prehandle::decode(string str) throw(...)
 				else if (!isnumber(otmp))
 					throw Exception(Exception::ii, org_str);
 			}
-			else if (ftmp == "imme1")
+			else if (ftmp == "imme")
 			{
 				if (Calculator::isequation(otmp))
 				{
