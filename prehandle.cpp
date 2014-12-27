@@ -554,16 +554,16 @@ string Prehandle::decode(string str) throw(...)
 				if (operation == "push" || operation == "pop")
 				{
 					strstream << offset;
-					str += replace(des, ftmp, otmp);
+					str += replace(des, ftmp, otmp, true);
 					strstream >> otmp;
 					strstream.clear();
-					str = replace(str, "imme", otmp);
+					str = replace(str, "imme", otmp, true);
 					offset += 2;
 					lfindex = 0;
 				}
 				else
 				{
-					des = replace(des, ftmp, otmp);
+					des = replace(des, ftmp, otmp, true);
 					lfindex = findex + 1;
 				}
 				loindex = oindex + 1;
