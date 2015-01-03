@@ -64,9 +64,9 @@ void Instr::initialize_map()
 	asm_map["xori"] = disasm_map[0x0E] = new rule("xori", 0x0E,0, "rt,rs,imme", 'i');
 	asm_map["div"] = disasm_map[0x1A] = new rule("div", 0x1A, 0, "rs", 'i');
 	asm_map["mul"] = disasm_map[0x1C] = new rule("mul", 0x1C, 0, "rs,rt", 'i');
+	asm_map["int"] = disasm_map[0x3F] = new rule("int", 0x3F, 0, "imme", 'i');
 
 	asm_map["j"] = disasm_map[0x02] = new rule("j", 0x02,0, "target", 'j');
-	asm_map["int"] = disasm_map[0x3F] = new rule("j", 0x3F, 0, "target", 'j');
 	asm_map["jal"] = disasm_map[0x03] = new rule("jal", 0x03,0, "target", 'j');
 
 	asm_map["add"] = disfuncasm_map[0x20] = new rule("add", 0,0x20, "rd,rs,rt", 'r');

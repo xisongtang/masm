@@ -810,7 +810,7 @@ FILEcopy:									//Input_string = $a0
 			bgtz	$t0,	FILEcopy_end
 			add	$t5,	$t4,	$zero
 			addi	$t4,	$t4,	1
-			beqi	$t4,	SIZE_FAT,	FILE_copy_error2
+			beqi	$t4,	SIZE_FAT,	FILEcopy_error2
 			lh	$t0,	ADDR_FAT($t4)
 			bnez	$t0,	-4
 			lh	$t3,	ADDR_FAT($t3)
@@ -849,7 +849,7 @@ FILEcopy:									//Input_string = $a0
 			//add an element
 			add	$t0,	$zero,	$zero
 			addi	$t0,	$t0,	16
-			beqi	$t0,	SIZE_DIR,	FFILEcopy_error3
+			beqi	$t0,	SIZE_DIR,	FILEcopy_error3
 			addi	$t0,	$t0,	MAXI
 			lh	$t1,	ADDR_DIR($t0)
 			bnez	$t1,	-4
