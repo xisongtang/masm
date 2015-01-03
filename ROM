@@ -20,18 +20,19 @@ Parameters:
 	CHAR_F11	equ		138
 	CHAR_F12	equ		139
 	CHAR_ESC	equ		27
+	MAXI		equ		32767	
 
 Address:
 	ADDR_SYSTEM	equ		1024
 	ADDR_SYSEND	equ		4095
 	ADDR_PROGRAM	equ		4096
 	ADDR_PROGEND	equ		29695
-	ADDR_FAT	equ		29696	//25k ~ 45k-1
-	ADDR_DIR	equ		46080	//45k ~ 46k-1
-	ADDR_FILE	equ		47104	//46k ~ 50k-1
-	ADDR_VRAM1	equ		51200	//50k ~ 52k-1
-	ADDR_VRAM2	equ		53248	//52k ~ 54k-1
-	ADDR_KEYBD	equ		55296	//54k ~ 55k-1
+	ADDR_FAT	equ		29696		//25k ~ 45k-1
+	ADDR_DIR	equ		46080-32767	//45k ~ 46k-1
+	ADDR_FILE	equ		47104-32767	//46k ~ 50k-1
+	ADDR_VRAM1	equ		51200-32767	//50k ~ 52k-1
+	ADDR_VRAM2	equ		53248-32767	//52k ~ 54k-1
+	ADDR_KEYBD	equ		55296-32767	//54k ~ 55k-1
 
 Misc:
 	SECTION_FAT	equ		2
@@ -65,47 +66,67 @@ Boot:
 		addi	$v0,	$zero,	0
 		addi	$v1,	$zero,	0
 		addi	$a0,	$a0,	'Z'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'P'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'C'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'系'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'统'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'加'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'载'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'中'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	33
 	Boot_loadsystem:
 		//**************************
 	Boot_2:
 		addi	$a0,	$a0,	'完'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 		addi	$a0,	$a0,	'成'
+		addi	$k0,	$k0,	MAXI
 		sh	$a0,	ADDR_VRAM1($k0)
 		sh	$zero,	ADDR_VRAM2($k0)
+		addi	$k0,	$k0,	-1*MAXI
 		addi	$k0,	$k0,	1
 	j 	Initialize
 
@@ -200,7 +221,9 @@ READint:									//
 		beq	$t2,	$k0,	READint_end
 		muli	$v0,	10
 		mflo	$v0
+		addi	$t1,	$t1,	MAXI
 		lh	$t2,	ADDR_VRAM1($t1)
+		addi	$t1,	$t1,	-1*MAXI
 		addi	$t2,	$t2,	-CHAR_ZERO
 		add	$v0,	$v0,	$t2
 		addi	$t1,	$t1,	1
@@ -222,19 +245,24 @@ READstring:									//Input_sp = $a0
 		add	$v0,	$a0,	$zero
 		jr	$ra
 PRINTchar:									//Input_char = $a0, Input_colour = $a1
+	addi	$k0,	$k0,	MAXI
 	sh	$a0,	ADDR_VRAM1($k0)
 	sh	$a1,	ADDR_VRAM2($k0)
+	addi	$k0,	$k0,	-1*MAXI
 	addi	$k0,	$k0,	1
 	jr	$ra
 READchar:									//
 	add	$t0,	$zero,	$zero
 	READchar_wait:
 		int	2
+		addi	$t0,	$t0,	MAXI
 		sh	$v0,	ADDR_KEYBD($t0)
+		addi	$t0,	$t0,	-1*MAXI
 	READchar_end:
 		jr	$ra
 FILEopen:									//Input_string = $a0
 	push	$ra
+	addi	$t0,	$t0,	MAXI
 	addi	$t0,	$zero,	ADDR_DIR
 	add 	$t1,	$zero,	$a0
 	FILEopen_find:
@@ -284,7 +312,9 @@ FILEopen:									//Input_string = $a0
 		pop	$ra
 		jr	$ra
 FILEread:									//
+	addi	$k1,	$k1,	MAXI
 	lh	$v0,	ADDR_FILE($k1)
+	addi	$k1,	$k1,	-1*MAXI
 	addi	$k1,	$k1,	1
 	beqi	$k1,	256,	FILEread_nextsection
 	j	FILEread_end
@@ -304,7 +334,9 @@ FILEread:									//
 	FILEread_end:
 		jr	$ra
 FILEwrite:									//Input_halfword = $a0
+	addi	$k1,	$k1,	MAXI
 	sh	$a0,	ADDR_FILE($k1)
+	addi	$k1,	$k1,	-1*MAXI
 	addi	$k1,	$k1,	1
 	beqi	$k1,	512,	FILEwrite_nextsection
 	j	FILEwrite_end
@@ -340,10 +372,14 @@ FILEwrite:									//Input_halfword = $a0
 			add	$t0,	$zero,	$zero
 			add	$t1,	$zero,	$zero
 			FILEwrite_update:
+				addi	$t0,	$t0,	MAXI
 				lh	$t2,	ADDR_FILE($t0)
+				addi	$t0,	$t0,	-1*MAXI
 				lh	$t3,	ADDR_FAT($t1)
 				sh	$t2,	ADDR_FAT($t1)
+				addi	$t0,	$t0,	MAXI
 				sh	$t3,	ADDR_FILE($t0)
+				addi	$t0,	$t0,	-1*MAXI
 				addi	$t0,	$t0,	1
 				addi	$t1,	$t1,	1
 				bnei	$t0,	256,	FILEwrite_update
@@ -366,7 +402,9 @@ FILEclose:									//
 	jr	$ra
 SysBreak:									//
 	int	2
-	lh	$v0,	ADDR_KEYBD($zero)
+	addi	$t0,	$zero,	MAXI
+	lh	$v0,	ADDR_KEYBD($t0)
+	addi	$t0,	$t0,	-1*MAXI
 	bnei	$v0,	CHAR_ESC,	-3
 	jr	$ra
 SysExit:									//
@@ -384,8 +422,10 @@ SysExit:									//
 ROLLSCREEN:
 	push	$ra
 	push	$k0
-	addi	$t1,	$zero,	ADDR_VRAM1
-	addi	$t2,	$zero,	ADDR_VRAM2
+	addi	$t1,	$zero,	MAXI
+	addi	$t2,	$zero,	MAXI
+	addi	$t1,	$t1,	ADDR_VRAM1
+	addi	$t2,	$t2,	ADDR_VRAM2
 	add	$k0,	$zero,	$zero
 	ROLLSCREEN_begin:
 		lw	$a0,	40($t1)
@@ -423,17 +463,22 @@ FILEdir:									//
 	add	$t0,	$zero,	$zero
 	FILEdir_element:
 		add	$t0,	$t3,	$zero		//Goto next file
+		addi	$t0,	$t0,	MAXI
 		lh	$a0,	ADDR_DIR($t0)
+		addi	$t0,	$t0,	-1*MAXI
 		FILEdir_exist:			//End if Filename = '\0'
 			beqi	$a0,	0,	FILEdir_end
 		FILEdir_hidden:			//Pass if File is hidden
 			addi	$t1,	$t0,	5
+			addi	$t1,	$t1,	MAXI
 			lh	$t2,	ADDR_DIR($t1)
+			addi	$t1,	$t1,	-1*MAXI
 			sll	$t2,	$t2,	30
 			srl	$t2,	$t2,	31
 			addi 	$t3,	$t0,	16
 			beqi	$t2,	1,	FILEdir_element
 		FILEdir_normal:
+			addi	$t0,	$t0,	MAXI
 			lh	$a0,	ADDR_DIR($t0)		//Filename.char1
 			addi	$t0,	$t0,	1
 			jal	PRINTchar
@@ -455,6 +500,7 @@ FILEdir:									//
 			jal	PRINTchar			//Filename.ext2
 			srl	$a0,	$t1,	8
 			jal	PRINTchar			//Filename.ext3
+			addi	$t0,	$t0,	-1*MAXI
 		jal	LINEFEED
 		j 	FILEdir_element
 	FILEdir_end:
@@ -463,7 +509,8 @@ FILEdir:									//
 		jr	$ra
 FILEdel:									//Input_string = $a0
 	push	$ra
-	addi	$t0,	$zero,	ADDR_DIR
+	addi	$t0,	$zero,	MAXI
+	addi	$t0,	$t0,	ADDR_DIR
 	add	$t1,	$zero,	$a0
 	FILEdel_find:
 		addi	$t2,	$t0,	0		//current file name
@@ -534,10 +581,12 @@ FILEdel:									//Input_string = $a0
 		add	$t0,	$zero,	$zero
 		add	$t1,	$zero,	$zero
 		FILEdel_update:
+			addi	$t0,	$t0,	MAXI
 			lh	$t2,	ADDR_FILE($t0)
 			lh	$t3,	ADDR_FAT($t1)
 			sh	$t2,	ADDR_FAT($t1)
 			sh	$t3,	ADDR_FILE($t0)
+			addi	$t0,	$t0,	-1*MAXI
 			addi	$t0,	$t0,	1
 			addi	$t1,	$t1,	1
 			bnei	$t0,	256,	FILEdel_update
@@ -550,10 +599,12 @@ FILEdel:									//Input_string = $a0
 		FILEdel_update3:
 		//update DIR section
 		add	$t0,	$zero,	$zero
+		addi	$t0,	$t0,	MAXI
 		lh	$t2,	ADDR_FILE($t0)
 		lh	$t3,	ADDR_DIR($t0)
 		sh	$t2,	ADDR_DIR($t0)
 		sh	$t3,	ADDR_FILE($t0)
+		addi	$t0,	$t0,	-1*MAXI
 		addi	$t0,	$t0,	1
 		addi	$t1,	$t1,	1
 		bnei	$t0,	256,	FILEdel_update3
@@ -563,7 +614,8 @@ FILErename:									//Input_string = $a0, Input_string = $a1
 	push	$ra
 	add	$t9,	$a1,	$zero
 	add	$a1,	$zero,	$zero
-	addi	$t0,	$zero,	ADDR_DIR
+	addi	$t0,	$zero,	MAXI
+	addi	$t0,	$t0,	ADDR_DIR
 	add 	$t1,	$zero,	$a0
 	FILErename_find:
 		addi	$t2,	$t0,	0		//current file name
@@ -631,10 +683,12 @@ FILErename:									//Input_string = $a0, Input_string = $a1
 	FILErename_writeback:
 		//update DIR section
 		add	$t0,	$zero,	$zero
+		addi	$t0,	$t0,	MAXI
 		lh	$t2,	ADDR_FILE($t0)
 		lh	$t3,	ADDR_DIR($t0)
 		sh	$t2,	ADDR_DIR($t0)
 		sh	$t3,	ADDR_FILE($t0)
+		addi	$t0,	$t0,	-1*MAXI
 		addi	$t0,	$t0,	1
 		addi	$t1,	$t1,	1
 		bnei	$t0,	256,	FILErename_writeback
@@ -642,7 +696,8 @@ FILErename:									//Input_string = $a0, Input_string = $a1
 		jr	$ra
 FILEcopy:									//Input_string = $a0
 	push	$ra
-	addi	$t0,	$zero,	ADDR_DIR
+	addi	$t0,	$zero,	MAXI
+	addi	$t0,	$t0,	ADDR_DIR
 	add	$t1,	$zero,	$a0
 	FILEcopy_find:
 		addi	$t2,	$t0,	0		//current file name
@@ -775,10 +830,12 @@ FILEcopy:									//Input_string = $a0
 		add	$t0,	$zero,	$zero
 		add	$t1,	$zero,	$zero
 		FILEcopy_update:
+			addi	$t0,	$t0,	MAXI
 			lh	$t2,	ADDR_FILE($t0)
 			lh	$t3,	ADDR_FAT($t1)
 			sh	$t2,	ADDR_FAT($t1)
 			sh	$t3,	ADDR_FILE($t0)
+			addi	$t0,	$t0,	-1*MAXI
 			addi	$t0,	$t0,	1
 			addi	$t1,	$t1,	1
 			bnei	$t0,	256,	FILEcopy_update
@@ -793,10 +850,13 @@ FILEcopy:									//Input_string = $a0
 			add	$t0,	$zero,	$zero
 			addi	$t0,	$t0,	16
 			beqi	$t0,	SIZE_DIR,	FFILEcopy_error3
+			addi	$t0,	$t0,	MAXI
 			lh	$t1,	ADDR_DIR($t0)
 			bnez	$t1,	-4
 			addi	$t2,	$t7,	ADDR_DIR
+			addi	$t2,	$t2,	MAXI
 			addi	$t3,	$t0,	ADDR_DIR
+			addi	$t3,	$t3,	MAXI
 			lw	$t4,	0($t2)
 			sw	$t4,	0($t3)
 			addi	$t2,	$t2,	2
@@ -829,10 +889,12 @@ FILEcopy:									//Input_string = $a0
 			sw	$t4,	0($t3)
 			//update DIR section
 			add	$t0,	$zero,	$zero
+			addi	$t0,	$t0,	MAXI
 			lh	$t2,	ADDR_FILE($t0)
 			lh	$t3,	ADDR_DIR($t0)
 			sh	$t2,	ADDR_DIR($t0)
 			sh	$t3,	ADDR_FILE($t0)
+			addi	$t0,	$t0,	-1*MAXI
 			addi	$t0,	$t0,	1
 			addi	$t1,	$t1,	1
 			bnei	$t0,	256,	-8
@@ -840,7 +902,8 @@ FILEcopy:									//Input_string = $a0
 		jr	$ra
 FILEtype:									//Input_string = $a0
 	push	$ra
-	addi	$t0,	$zero,	ADDR_DIR
+	addi	$t0,	$zero,	MAXI
+	addi	$t0,	$t0,	ADDR_DIR
 	add 	$t1,	$zero,	$a0
 	FILEtype_find:
 		addi	$t2,	$t0,	0		//current file name
@@ -1029,7 +1092,9 @@ Initialize_load:
 		addi	$a0,	$zero,	SECTION_FAT
 	Initialize_FAT_element:
 		int	0
+		addi	$t0,	$t0,	MAXI
 		lh	$t2,	ADDR_FILE($t0)
+		addi	$t0,	$t0,	-1*MAXI
 		sh	$t2,	ADDR_FAT($t1)
 		addi	$t0,	$t0,	1
 		addi	$t1,	$t1,	1
@@ -1043,7 +1108,9 @@ Initialize_load:
 		addi	$a0,	$zero,	SECTION_DIR
 	Initialize_DIR_element:
 		int	0
+		addi	$t0,	$t0,	MAXI
 		lh	$t2,	ADDR_FILE($t0)
+		addi	$t0,	$t0,	-1*MAXI
 		sh	$t2,	ADDR_DIR($t1)
 		addi	$t0,	$t0,	1
 		addi	$t1,	$t1,	1
@@ -1266,4 +1333,4 @@ PHASE_open:
 	addi	$v0,	$zero,	6
 	jal	Syscall
 	j	PHASE_end
-PHASE_end:
+PHASE_end
