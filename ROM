@@ -1333,4 +1333,4 @@ PHASE_open:
 	addi	$v0,	$zero,	6
 	jal	Syscall
 	j	PHASE_end
-PHASE_end
+PHASE_end:
