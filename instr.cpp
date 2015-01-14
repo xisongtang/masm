@@ -159,8 +159,8 @@ void Instr::initialize_map()
 	reg_map["$30"] = "$30";
 	reg_map["$31"] = "$31";
 	sections.push_back("");
-	sections.push_back("data");
 	sections.push_back("text");
+	sections.push_back("data");
 	is_map_initialized = true;
 }
 

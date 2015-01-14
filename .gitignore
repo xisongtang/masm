@@ -236,3 +236,5 @@ $RECYCLE.BIN/
 *.s
 *.txt
 *.out
+MIPS_system
+test.cpp

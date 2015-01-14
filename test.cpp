@@ -9,6 +9,8 @@ using namespace std;
 
 int main()
 {
-	
+	Calculator calc("(-1)*32767");
+	cout << calc.exec();
+	system("pause");
 }
 #endif

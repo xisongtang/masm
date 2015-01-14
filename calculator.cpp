@@ -50,11 +50,11 @@ void Calculator::decode(string str)
 	{
 		if (str[i] <= '9' && str[i] >= '0' || str[i] <= 'F' && str[i] >= 'A' ||
 			str[i] <= 'f' && str[i] >= 'a' || str[i] == 'x' || str[i] == 'X' ||
-			((str[i] == '-' || str[i] == '+') && (i == 0 || str[i] == '(')))
+			((str[i] == '-' || str[i] == '+') && (i == 0 || str[i - 1] == '(')))
 		{
 			while (str[i] <= '9' && str[i] >= '0' || str[i] <= 'F' && str[i] >= 'A' ||
 			str[i] <= 'f' && str[i] >= 'a' || str[i] == 'x' || str[i] == 'X' ||
-			((str[i] == '-' || str[i] == '+') && (i == 0 || str[i] == '(')))
+			((str[i] == '-' || str[i] == '+') && (i == 0 || str[i - 1] == '(')))
 				num += str[i++];
 			mix mtmp(toInt(num));
 			mixqueue.push_back(mtmp);
@@ -66,14 +66,14 @@ void Calculator::decode(string str)
 			throw Exception("Invalid equation", equation);
 		regex re("[+\\-\\*/%~^&\\|\\(\\)zys#]");
 		if (!regex_match(op, re))
-			throw Exception("Invalid operation of in the equation:" + op, equation);
+			throw Exception("Invalid operation in the equation:" + op, equation);
 		if (op == ")")
 		{
 			while (opstack.back() != "(")
 			{
 				if (opstack.back() == "#")
 					throw Exception("Unmatched parentheses in equation", str);
-				mix mtmp(opstack.back());
+				mix mtmp(opstack.back()); 
 				mixqueue.push_back(mtmp);
 				opstack.pop_back();
 			}
@@ -94,7 +94,9 @@ void Calculator::decode(string str)
 				break;
 			opstack.push_back(op);
 		}
-		else 
+		else if (op == "#" && opstack.back() == "#")
+			break;
+		else
 			opstack.push_back(op);
 	}
 }
@@ -195,5 +197,5 @@ int Calculator::toInt(string str)
 
 bool Calculator::isequation(string str)
 {
-	return has(str, "[+\\-\\*/%~&\\|^<>\\(\\)]");
+	return has(str, "[+\\-\\*/%~&\\|^<>\\(\\)]", false);
 }

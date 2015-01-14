@@ -186,6 +186,7 @@ string Prehandle::decode(string str) throw(...)
 	str = replace(str, "//", "#");
 	index = str.find('#');
 	string cmt_str;
+	
 	//divide the comment from the instruction
 	if (index != string::npos)
 	{
@@ -209,7 +210,14 @@ string Prehandle::decode(string str) throw(...)
 		isincomment = true;
 		str = str.substr(0, index);
 	}
-	
+
+	//resolve the value symlized by equ expressiona
+	for (map<string, string>::iterator it = const_map.begin(); it != const_map.end(); ++it)
+	{
+		if (has(str, it->first))
+			str = replace(str, it->first, it->second, true);
+	}
+
 	//change the char to ascii number
 	while (true)
 	{
@@ -284,13 +292,6 @@ string Prehandle::decode(string str) throw(...)
 				tmp += ',';
 		}
 		str = sm.prefix().str() + tmp + sm.suffix().str();
-	}
-
-	//resolve the value symlized by equ expressiona
-	for (map<string, string>::iterator it = const_map.begin(); it != const_map.end(); ++it)
-	{
-		if (has(str, it->first))
-			str = replace(str, it->first, it->second, true);
 	}
 
 	//resolve the multiline data
@@ -503,8 +504,10 @@ string Prehandle::decode(string str) throw(...)
 				}
 				else if (islegallabel(otmp))
 					;
-				else if (!isnumber(otmp))
+				else if (!isnumber(otmp)){
+					cout << otmp;
 					throw Exception(Exception::ii, org_str);
+				}
 			}
 			else if (ftmp == "target")
 			{
