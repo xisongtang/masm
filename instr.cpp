@@ -632,11 +632,11 @@ void Instr::_resolvelabel(Instr &label, Instr &haslabel)
 			}
 			else if (haslabel.type == 'i')//i-type instrs except branch
 			{
-				haslabel.imme = label.address / 4;
+				haslabel.imme = label.address / 2;
 			}
 			else if(haslabel.type == 'j' )//j-type
 			{
-				haslabel.target = label.address / 4;
+				haslabel.target = label.address / 2;
 			}
 		}
 	}
