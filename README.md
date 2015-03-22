@@ -75,25 +75,27 @@ a mips assembler
 - lb和sb在写汇编代码的时候也可以使用，但因为整个结构为16位的，所以会直接被预处理成lh和sh指令  
 
 ##格式指令
-(名称;格式;说明)  
 
-- equ;符号 equ <表达式>;    
-- .align;.align n;地址按2的n幂对齐    
-- .origin;.origin addr;
-- .data;;
-- .text;;
-- .end;.end L;从当前行到L行都被直接跳过而不被汇编器翻译（与注释相同，但是中间行会被语法检查）  
-- dup;n dup(<表达式>)或(‘字符’);重复括号内容n次  
-- .byte;变量 .byte<表>;会被直接当作.2byte使用  
-- .2byte;;  
-- .4byte;;  
-- .8byte;;  
-- .word;;  
-- .dword;;   
-- .half;;  
-- .ascii;;  
-- .asciiz;以0结束的ascii字符串变量;  
-- .space;.space n;n字节空间  
+| 名称 | 格式 | 说明 |
+|:----|:----|:----|
+| equ | 符号 equ <表达式> |  |
+| .align | .align n | 地址按2的n幂对齐 |
+| .origin | .origin addr |
+| .data |  |
+| .text |  |
+| .end | .end L | 从当前行到L行都被直接跳过而不被汇编器翻译（与注释相同，但是中间行会被语法检查） |
+| dup | n dup(<表达式>)或(‘字符’) | 重复括号内容n次 |
+| .byte | 变量 .byte<表> | 会被直接当作.2byte使用 |
+| .2byte |  |  |
+| .4byte |  |  |
+| .8byte |  |  |
+| .word |  |  |
+| .dword |  |  |
+| .half |  |  |
+| .ascii |  |  |
+| .asciiz | 以0结束的ascii字符串变量 |  |
+| .space | .space n | n字节空 |
+
 
 ##注释		
 //, #, /* */  
